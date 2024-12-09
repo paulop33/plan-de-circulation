@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de circulation</title>
+    <link
+            href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css"
+            rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+
+</head>
+<body>
+
+<div id="map" style="width: 100%; height: 100vh;"></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoicGF1bG9wMzMiLCJhIjoiY2xkcHRjNmZ3MDN3cTNvcDlxeGw3a2RwayJ9.yFjdNuiVuKndIVLwxoxLZA';
+    const map = new mapboxgl.Map({
+        container: 'map', // ID de l'élément HTML où la carte sera rendue
+        style: 'mapbox://styles/mapbox/streets-v11', // Style de carte
+        center: [-0.5670392, 44.82459], // Coordonnées (longitude, latitude) de Paris
+        zoom: 14
+    });
+
+    map.on('load', () => {
+        map.addSource('roads', {
+            type: 'geojson', data: 'export.geojson'
+        });
+
+        map.addLayer({
+            id: 'road-layer', type: 'line', source: 'roads', paint: {
+                'line-color': '#ff0000', 'line-width': 4
+            }, layout: {
+                'line-cap': 'round', 'line-join': 'round'
+            }
+        });
+
+        map.addLayer({
+            id: 'arrows', type: 'symbol', source: 'roads', layout: {
+                'symbol-placement': 'line', 'text-field': '▶', // Utilise une flèche
+                'text-size': 16, 'text-rotate': 0, // Ajuste selon le sens
+                'text-keep-upright': false
+            }, paint: {
+                'text-color': '#0000ff'
+            }
+        });
+
+        map.on('click', 'arrows', (e) => {
+            const feature = e.features[0];
+            toggleDirection(feature);
+        });
+    });
+
+    function toggleDirection(feature) {
+        const newDirection = feature.properties.oneway === 'yes' ? 'no' : 'yes';
+
+        // Mettre à jour les données locales
+        feature.properties.oneway = newDirection;
+
+        // Mettre à jour la source sur la carte
+        const data = map.getSource('roads')._data;
+        data.features = data.features.map(f => {
+            if (f.id === feature.id) {
+                f.properties.oneway = newDirection;
+            }
+            return f;
+        });
+        map.getSource('roads').setData(data);
+
+        // Redessiner les flèches
+        map.setLayoutProperty('arrows', 'text-field', newDirection === 'yes' ? '▶' : '◀');
+    }
+</script>
+</body>
+</html>

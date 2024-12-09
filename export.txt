@@ -1,0 +1,23 @@
+// @name Cycle Network
+
+/*
+This shows the cycleway and cycleroute network.
+*/
+
+[out:json];
+
+(
+  // get cycleways
+  way[highway=primary]({{bbox}});
+  way[highway=secondary]({{bbox}});
+  way[highway=tertiary]({{bbox}});
+
+  way[highway=residential]({{bbox}});
+  way[highway=living_street]({{bbox}});
+  way[highway=pedestrian]({{bbox}});
+
+);
+
+out body;
+>;
+out skel qt;
