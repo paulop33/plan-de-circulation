@@ -23,53 +23,94 @@
         zoom: 14
     });
 
-    map.on('load', () => {
+    map.on('load', async () => {
+        const response = await fetch(
+            'export.geojson'
+        );
+        const data = await response.json();
+
         map.addSource('roads', {
-            type: 'geojson', data: 'export.geojson'
+            type: 'geojson',
+            data: data,
+            generateId: true,
         });
 
         map.addLayer({
             id: 'road-layer', type: 'line', source: 'roads', paint: {
-                'line-color': '#ff0000', 'line-width': 4
+                'line-color': [
+                    'case',
+                    ['==', ['get', 'reverse'], true],
+                    '#000000',  // Affiche une flèche vers la gauche si reverse est true
+                    '#8e8c8c',   // Sinon, affiche une flèche vers la droite
+                ],                'line-width': 2,
+                'line-opacity': 1,
             }, layout: {
-                'line-cap': 'round', 'line-join': 'round'
+                'line-cap': 'round',
+                'line-join': 'round'
             }
         });
 
         map.addLayer({
-            id: 'arrows', type: 'symbol', source: 'roads', layout: {
-                'symbol-placement': 'line', 'text-field': '▶', // Utilise une flèche
-                'text-size': 16, 'text-rotate': 0, // Ajuste selon le sens
-                'text-keep-upright': false
+            id: 'arrows',
+            type: 'symbol',
+            source: 'roads',
+            layout: {
+                'symbol-placement': 'line',
+                'text-field': [
+                    'case',
+                    ['==', ['get', 'reverse'], true],
+                    '◀',  // Affiche une flèche vers la gauche si reverse est true
+                    '▶'   // Sinon, affiche une flèche vers la droite
+                ],
+                'text-rotate': 0, // Ajuste selon le sens
+                'text-keep-upright': false,
+                'text-size': [
+                    'interpolate', ['linear'], ['zoom'],
+                    0, 10,  // Taille de 16 au zoom 0
+                    24, 32  // Taille de 32 au zoom 24
+                ],
+
+                'symbol-spacing': [
+                    'interpolate', ['linear'], ['zoom'],
+                    0, 100,  // Taille de 16 au zoom 0
+                    24, 25  // Taille de 32 au zoom 24
+                ],
+                // 'icon-allow-overlap': true,
+                // 'icon-ignore-placement': true,
+                // 'icon-image': 'arrow',
+                'icon-size': 0.045,
+                'visibility': 'visible'
+
             }, paint: {
-                'text-color': '#0000ff'
-            }
+                'text-color': [
+                    'case',
+                    ['==', ['get', 'reverse'], true],
+                    '#000000',  // Affiche une flèche vers la gauche si reverse est true
+                    '#8e8c8c',   // Sinon, affiche une flèche vers la droite
+                ],
+                'text-opacity': 1,
+            },
+            minzoom: 0, // Rendre la couche visible à tous les niveaux de zoom
+            maxzoom: 24,
+            filter: ['==', ['get', 'oneway'], 'yes'] // Affiche seulement si oneway == "yes"
         });
 
-        map.on('click', 'arrows', (e) => {
+        map.on('click', 'road-layer', (e) => {
             const feature = e.features[0];
-            toggleDirection(feature);
+            toggleDirection(feature, data);
         });
     });
 
-    function toggleDirection(feature) {
-        const newDirection = feature.properties.oneway === 'yes' ? 'no' : 'yes';
-
-        // Mettre à jour les données locales
-        feature.properties.oneway = newDirection;
-
-        // Mettre à jour la source sur la carte
-        const data = map.getSource('roads')._data;
-        data.features = data.features.map(f => {
-            if (f.id === feature.id) {
-                f.properties.oneway = newDirection;
+    function toggleDirection(feature, data) {
+        feature.properties.reverse = typeof feature.properties.reverse != 'undefined' ? !feature.properties.reverse : true;
+        data.features.map(function (elem) {
+            if (elem.id === feature.properties["@id"]) {
+                elem.properties = feature.properties;
             }
-            return f;
+            return elem;
         });
-        map.getSource('roads').setData(data);
-
-        // Redessiner les flèches
-        map.setLayoutProperty('arrows', 'text-field', newDirection === 'yes' ? '▶' : '◀');
+        // Modifier la source avec les nouvelles données
+        map.getSource(feature.source).setData(data);
     }
 </script>
 </body>
