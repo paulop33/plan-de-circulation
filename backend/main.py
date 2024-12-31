@@ -41,7 +41,7 @@ def query_postgis(min_lon, min_lat, max_lon, max_lat):
             "properties": {
                 "name": row[1],
                 "@id": row[2],
-                "oneway": row[3]
+                "oneway": row[3] == "yes"
             }
         }
         for row in results

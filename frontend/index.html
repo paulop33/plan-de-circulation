@@ -55,8 +55,8 @@
                 'line-color': [
                     'case',
                     ['==', ['get', 'override'], true],
-                    '#000000',  // Affiche une flèche vers la gauche si reverse est true
-                    '#8e8c8c',   // Sinon, affiche une flèche vers la droite
+                    '#000000',
+                    '#8e8c8c',
                 ],
                 'line-width': 3,
                 'line-opacity': 1,
@@ -88,8 +88,8 @@
 
                 'symbol-spacing': [
                     'interpolate', ['linear'], ['zoom'],
-                    0, 100,  // Taille de 16 au zoom 0
-                    24, 25  // Taille de 32 au zoom 24
+                    0, 100,  // Taille de 100 au zoom 0
+                    24, 25  // Taille de 25 au zoom 24
                 ],
                 // 'icon-allow-overlap': true,
                 // 'icon-ignore-placement': true,
@@ -101,14 +101,14 @@
                 'text-color': [
                     'case',
                     ['==', ['get', 'override'], true],
-                    '#000000',  // Affiche une flèche vers la gauche si reverse est true
-                    '#8e8c8c',   // Sinon, affiche une flèche vers la droite
+                    '#000000',
+                    '#8e8c8c',
                 ],
                 'text-opacity': 1,
             },
             minzoom: 0, // Rendre la couche visible à tous les niveaux de zoom
             maxzoom: 24,
-            filter: ['==', ['get', 'oneway'], 'yes'] // Affiche seulement si oneway == "yes"
+            filter: ['==', ['get', 'oneway'], true] // Affiche seulement si oneway == true
         });
         map.on('click', 'road-layer', (e) => {
             const feature = e.features[0];
@@ -130,7 +130,7 @@
 
     function toggleDirection(feature, data) {
         if (typeof feature.properties.oneway === 'undefined') {
-            feature.properties.oneway = "no";
+            feature.properties.oneway = false;
         }
         if (typeof feature.properties.reverse === 'undefined') {
             feature.properties.reverse = false;
@@ -139,17 +139,17 @@
             feature.properties.initialoneway = feature.properties.oneway;
         }
         feature.properties.override = true;
-        if (feature.properties.oneway === "no") {
-            feature.properties.oneway = "yes";
+        if (feature.properties.oneway === false) {
+            feature.properties.oneway = true;
             feature.properties.reverse = false;
         }
-        else if (feature.properties.oneway === "yes"
+        else if (feature.properties.oneway === true
             && (!feature.properties.reverse)) {
-            feature.properties.oneway = "yes";
+            feature.properties.oneway = true;
             feature.properties.reverse = true;
         }
-        else if (feature.properties.oneway === "yes" && feature.properties.reverse === true) {
-            feature.properties.oneway = "no";
+        else if (feature.properties.oneway === true && feature.properties.reverse === true) {
+            feature.properties.oneway = false;
             feature.properties.reverse = false;
         }
 
