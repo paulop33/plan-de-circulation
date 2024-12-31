@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: postgis
+    environment:
+      POSTGRES_USER: userdb     # Remplacez par un utilisateur
+      POSTGRES_PASSWORD: passdb # Remplacez par un mot de passe
+      POSTGRES_DB: geodatabase  # Nom de la base de données
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: backend
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app  # Montée du volume pour que les changements sur l'hôte se répercutent dans le conteneur
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: userdb     # Remplacez par un utilisateur
+      POSTGRES_PASSWORD: passdb # Remplacez par un mot de passe
+      POSTGRES_DB: geodatabase  # Nom de la base de données
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: nginx:latest
+    container_name: frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+volumes:
+  postgis_data:
+    driver: local

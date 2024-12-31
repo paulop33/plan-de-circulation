@@ -23,11 +23,29 @@
         zoom: 14
     });
 
+    async function loadGeoJSON(bounds) {
+        const url = new URL('http://localhost:8000/api/data');
+        url.searchParams.append('min_lon', bounds.getWest());
+        url.searchParams.append('min_lat', bounds.getSouth());
+        url.searchParams.append('max_lon', bounds.getEast());
+        url.searchParams.append('max_lat', bounds.getNorth());
+
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    let data = [];
+    let userChanges = {};
+    async function refreshData() {
+        data = await loadGeoJSON(map.getBounds());
+        for (const [key, value] of Object.entries(userChanges)) {
+            applyChangeOnFeature(data, value);
+        }
+        map.getSource('roads').setData(data);
+    }
+
     map.on('load', async () => {
-        const response = await fetch(
-            'export.geojson'
-        );
-        const data = await response.json();
+        data = await loadGeoJSON(map.getBounds());
 
         map.addSource('roads', {
             type: 'geojson',
@@ -43,7 +61,7 @@
                     '#000000',  // Affiche une flèche vers la gauche si reverse est true
                     '#8e8c8c',   // Sinon, affiche une flèche vers la droite
                 ],
-                'line-width': 2,
+                'line-width': 3,
                 'line-opacity': 1,
             }, layout: {
                 'line-cap': 'round',
@@ -95,12 +113,23 @@
             maxzoom: 24,
             filter: ['==', ['get', 'oneway'], 'yes'] // Affiche seulement si oneway == "yes"
         });
-
         map.on('click', 'road-layer', (e) => {
             const feature = e.features[0];
             toggleDirection(feature, data);
         });
     });
+
+    map.on('moveend', refreshData);
+    map.on('zoomend', refreshData);
+
+    function applyChangeOnFeature(data, feature) {
+        data.features.map(function (elem) {
+            if (elem.properties['@id'] === feature.properties['@id']) {
+                elem.properties = feature.properties;
+            }
+            return elem;
+        });
+    }
 
     function toggleDirection(feature, data) {
         feature.properties.override = true;
@@ -117,12 +146,9 @@
             feature.properties.oneway = "no";
             feature.properties.reverse = false;
         }
-        data.features.map(function (elem) {
-            if (elem.id === feature.properties["@id"]) {
-                elem.properties = feature.properties;
-            }
-            return elem;
-        });
+
+        userChanges[feature.properties['@id']] = feature;
+        applyChangeOnFeature(data, feature);
         // Modifier la source avec les nouvelles données
         map.getSource(feature.source).setData(data);
     }
