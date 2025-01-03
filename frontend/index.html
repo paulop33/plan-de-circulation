@@ -34,7 +34,7 @@
     let data = [];
     let userChanges = {};
     async function refreshData() {
-        if (map.getZoom() <= 14) {
+        if (map.getZoom() < 14) {
             return;
         }
         data = await loadGeoJSON(map.getBounds());
