@@ -11,6 +11,7 @@ https://overpass-turbo.eu/# permet par exemple d'exporter les données d'OSM (un
 Le petit utilitaire ogr2ogr peut servir à importer dans la base de données Postgis.
 
 ```bash
+docker cp export.geojson backend:/app
 ogr2ogr -f "PostgreSQL" PG:"host=db port=5432 dbname=geodatabase user=userdb password=passdb" export.geojson -nln osm_data -lco GEOMETRY_NAME=geom
 ```
 
