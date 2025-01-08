@@ -1,0 +1,6 @@
+dependencies:
+- name: postgis
+  repository: oci://ghcr.io/aquaveo
+  version: 0.2.4
+digest: sha256:df11816b8bdb61e99551a9f9cd94361a17edd211eb8b7cace33d61ac8028a7ec
+generated: "2025-01-04T14:02:10.722543687+01:00"
