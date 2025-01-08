@@ -1,0 +1,9 @@
+apiVersion: v2
+name: plan-de-circulation
+description: "Visualisation et modification du plan de circulation"
+type: application
+version: 0.1.0
+dependencies:
+- name: postgis
+  version: 0.2.4
+  repository: oci://ghcr.io/aquaveo

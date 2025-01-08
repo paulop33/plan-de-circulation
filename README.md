@@ -5,9 +5,9 @@ Les données proviennent d'OpenStreetMap (OSM).
 
 ## Charger les données :
 Le projet ne dispose pas de données par défaut. Il faudra les récupérer.
-https://overpass-turbo.eu/# permet par exemple d'exporter les données d'OSM (un exemple de requete se trouve dans le fichier export.txt```).
+https://overpass-turbo.eu/# permet par exemple d'exporter les données d'OSM (un exemple de requete se trouve dans le fichier ``export.txt``).
 
-### Import des données 
+### Import des données
 Le petit utilitaire ogr2ogr peut servir à importer dans la base de données Postgis.
 
 ```bash

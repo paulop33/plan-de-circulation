@@ -1,0 +1,44 @@
+frontend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/loicgombeaud/plan-de-circulation-frontend
+    tag: latest
+    pullPolicy: Always
+  annotations:
+    keel.sh/policy: force
+
+backend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/loicgombeaud/plan-de-circulation-backend
+    tag: latest
+    pullPolicy: Always
+  annotations:
+    keel.sh/policy: force
+
+postgis:
+  image:
+    tag: 15-3.3
+  postgres_user: root
+  postgres_password: root
+  postgres_database: geodatabase
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  className: nginx
+  host: plan-de-circulation.velo-cite.org
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      gzip on;
+      gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth

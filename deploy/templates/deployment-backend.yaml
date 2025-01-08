@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plan-de-circulation.fullname" . }}-backend
+  labels:
+    {{- include "plan-de-circulation.labels" . | nindent 4 }}
+    component: backend
+  {{- with .Values.backend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+  selector:
+    matchLabels:
+      {{- include "plan-de-circulation.selectorLabels" . | nindent 6 }}
+      component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "plan-de-circulation.selectorLabels" . | nindent 8 }}
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        env:
+        - name: POSTGRES_HOST
+          value: plan-de-circulation-postgis
+        - name: POSTGRES_PORT
+          value: "5432"
+        {{- with .Values.postgis }}
+        - name: POSTGRES_USER
+          value: {{ .postgres_user }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .postgres_password }}
+        - name: POSTGRES_DB
+          value: {{ .postgres_database }}
+        {{- end }}
