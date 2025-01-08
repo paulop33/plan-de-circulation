@@ -14,7 +14,10 @@ services:
       - postgis_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        PORT: 8000
     container_name: backend
     depends_on:
       - db
