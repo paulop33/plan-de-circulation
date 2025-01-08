@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query
 from psycopg2 import connect
 import json
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI()
 
@@ -16,11 +17,11 @@ app.add_middleware(
 
 # Connexion PostgreSQL
 DB_SETTINGS = {
-    "dbname": "geodatabase",
-    "user": "userdb",
-    "password": "passdb",
-    "host": "db",
-    "port": "5432"
+    "dbname": os.getenv("POSTGRES_DB", "geodatabase"),
+    "user": os.getenv("POSTGRES_USER", "userdb"),
+    "password": os.getenv("POSTGRES_PASSWORD", "passdb"),
+    "host": os.getenv("POSTGRES_HOST", "db"),
+    "port": os.getenv("POSTGRES_PORT", "5432"),
 }
 
 def query_postgis(min_lon, min_lat, max_lon, max_lat):
