@@ -1,0 +1,21 @@
+name: '[Backend] Build, push, deploy'
+
+on:
+  push:
+    paths:
+      - backend/**
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-push-deploy:
+    uses: LoicGombeaud/workflows/.github/workflows/build-push-deploy.yaml@main
+    with:
+      image-repository: plan-de-circulation-backend
+      image-tags: latest
+      keel-fqdn: keel.velo-cite.org
+      keel-user: plan-de-circulation
+      docker-context-path: ./backend
+    secrets:
+      keel-password: ${{ secrets.KEEL_PASSWORD }}

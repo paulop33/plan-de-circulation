@@ -1,0 +1,22 @@
+name: '[Frontend] Build, push, deploy'
+
+on:
+  push:
+    paths:
+      - frontend/**
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-push-deploy:
+    uses: LoicGombeaud/workflows/.github/workflows/build-push-deploy.yaml@main
+    with:
+      image-repository: plan-de-circulation-frontend
+      image-tags: latest
+      keel-fqdn: keel.velo-cite.org
+      keel-user: plan-de-circulation
+      docker-context-path: ./frontend
+      build-args: BACKEND_URL=https://plan-de-circulation.velo-cite.org
+    secrets:
+      keel-password: ${{ secrets.KEEL_PASSWORD }}
