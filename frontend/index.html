@@ -5,167 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de circulation</title>
     <link href="style.css" rel="stylesheet" />
-    <script src="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.js"></script>
-    <link href="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
+<!--    <script src="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.js"></script>-->
+<!--    <link href="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.css" rel="stylesheet" />-->
 </head>
 <body>
 
 <div id="map" style="width: 100%; height: 100vh;"></div>
-<script src="/config.js"></script>
-<script>
-    const map = new maplibregl.Map({
-        container: 'map', // ID de l'élément HTML où la carte sera rendue
-        style: '/assets/style.json', // Style MapLibre (modifiez si besoin)
-        center: [-0.5670392, 44.82459], // Coordonnées (longitude, latitude)
-        zoom: 14
-    });
+<script type="module">
+    import { initializeMap } from './map.js';
 
-
-    async function loadGeoJSON(bounds) {
-        const url = new URL('/api/data', appConfig.backendUrl);
-        url.searchParams.append('min_lon', bounds.getWest());
-        url.searchParams.append('min_lat', bounds.getSouth());
-        url.searchParams.append('max_lon', bounds.getEast());
-        url.searchParams.append('max_lat', bounds.getNorth());
-
-        const response = await fetch(url);
-        return await response.json();
-    }
-
-    let data = [];
-    let userChanges = {};
-    async function refreshData() {
-        if (map.getZoom() < 14) {
-            return;
-        }
-        data = await loadGeoJSON(map.getBounds());
-        for (const [key, value] of Object.entries(userChanges)) {
-            applyChangeOnFeature(data, value);
-        }
-        map.getSource('roads').setData(data);
-    }
-
-    map.on('load', async () => {
-        data = await loadGeoJSON(map.getBounds());
-
-        map.addSource('roads', {
-            type: 'geojson',
-            data: data,
-            generateId: true,
-        });
-
-        map.addLayer({
-            id: 'road-layer', type: 'line', source: 'roads', paint: {
-                'line-color': [
-                    'case',
-                    ['==', ['get', 'override'], true],
-                    '#000000',
-                    '#8e8c8c',
-                ],
-                'line-width': 3,
-                'line-opacity': 1,
-            }, layout: {
-                'line-cap': 'round',
-                'line-join': 'round'
-            }
-        });
-
-        map.addLayer({
-            id: 'arrows',
-            type: 'symbol',
-            source: 'roads',
-            layout: {
-                'symbol-placement': 'line',
-                'text-field': [
-                    'case',
-                    ['==', ['get', 'reverse'], true],
-                    '◀',  // Affiche une flèche vers la gauche si reverse est true
-                    '▶'   // Sinon, affiche une flèche vers la droite
-                ],
-                'text-rotate': 0, // Ajuste selon le sens
-                'text-keep-upright': false,
-                'text-size': [
-                    'interpolate', ['linear'], ['zoom'],
-                    0, 10,  // Taille de 16 au zoom 0
-                    24, 32  // Taille de 32 au zoom 24
-                ],
-
-                'symbol-spacing': [
-                    'interpolate', ['linear'], ['zoom'],
-                    0, 100,  // Taille de 100 au zoom 0
-                    24, 25  // Taille de 25 au zoom 24
-                ],
-                // 'icon-allow-overlap': true,
-                // 'icon-ignore-placement': true,
-                // 'icon-image': 'arrow',
-                'icon-size': 10,
-                'visibility': 'visible'
-
-            }, paint: {
-                'text-color': [
-                    'case',
-                    ['==', ['get', 'override'], true],
-                    '#000000',
-                    '#8e8c8c',
-                ],
-                'text-opacity': 1,
-            },
-            minzoom: 0, // Rendre la couche visible à tous les niveaux de zoom
-            maxzoom: 24,
-            filter: ['==', ['get', 'oneway'], true] // Affiche seulement si oneway == true
-        });
-        map.on('click', 'road-layer', (e) => {
-            const feature = e.features[0];
-            toggleDirection(feature, data);
-        });
-    });
-
-    map.on('moveend', refreshData);
-    map.on('zoomend', refreshData);
-
-    function applyChangeOnFeature(data, feature) {
-        data.features.map(function (elem) {
-            if (elem.properties['@id'] === feature.properties['@id']) {
-                elem.properties = feature.properties;
-            }
-            return elem;
-        });
-    }
-
-    function toggleDirection(feature, data) {
-        if (typeof feature.properties.oneway === 'undefined') {
-            feature.properties.oneway = false;
-        }
-        if (typeof feature.properties.reverse === 'undefined') {
-            feature.properties.reverse = false;
-        }
-        if (typeof userChanges[feature.properties['@id']] == 'undefined') {
-            feature.properties.initialoneway = feature.properties.oneway;
-        }
-        feature.properties.override = true;
-        if (feature.properties.oneway === false) {
-            feature.properties.oneway = true;
-            feature.properties.reverse = false;
-        }
-        else if (feature.properties.oneway === true
-            && (!feature.properties.reverse)) {
-            feature.properties.oneway = true;
-            feature.properties.reverse = true;
-        }
-        else if (feature.properties.oneway === true && feature.properties.reverse === true) {
-            feature.properties.oneway = false;
-            feature.properties.reverse = false;
-        }
-
-        if (
-            feature.properties.initialoneway === feature.properties.oneway && feature.properties.reverse === false) {
-            feature.properties.override = false;
-        }
-        userChanges[feature.properties['@id']] = feature;
-        applyChangeOnFeature(data, feature);
-        // Modifier la source avec les nouvelles données
-        map.getSource(feature.source).setData(data);
-    }
+    // Initialisation de la carte
+    const map = initializeMap('map', '/assets/style.json', [-0.5670392, 44.82459], 14);
 </script>
+
 </body>
 </html>
