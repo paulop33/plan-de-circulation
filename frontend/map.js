@@ -1,5 +1,5 @@
 // map.js
-import maplibregl from 'maplibre-gl';
+import maplibregl, {AttributionControl, NavigationControl} from 'maplibre-gl';
 import {appConfig, loadGeoJSON, refreshData, toggleDirection} from './utils.js';
 
 let map;
@@ -11,8 +11,12 @@ export function initializeMap(containerId, styleUrl) {
         container: containerId, // ID de l'élément HTML où la carte sera rendue
         style: styleUrl,        // Style MapLibre (modifiez si besoin)
         center: appConfig.mapInitCenter,         // Coordonnées (longitude, latitude)
-        zoom: appConfig.mapInitZoom              // Niveau de zoom initial
+        zoom: appConfig.mapInitZoom,              // Niveau de zoom initial
+        attributionControl: false,
     });
+    map.addControl(new NavigationControl({ showCompass: false }), 'top-left');
+    map.addControl(new AttributionControl({ compact: false }), 'bottom-left');
+
 
     map.on('load', async () => {
         data = await loadGeoJSON(map.getBounds());
