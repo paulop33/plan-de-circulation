@@ -1,19 +1,7 @@
 // map.js
 import maplibregl, {AttributionControl, NavigationControl} from 'maplibre-gl';
 import * as turf from '@turf/turf';
-import {appConfig, loadGeoJSON, refreshData, toggleDirection} from './utils.js';
-
-// Exemple d'une ligne
-const line = turf.lineString([
-    [0, 0],
-    [5, 5],
-    [10, 10],
-]);
-// Point de coupure
-const point = turf.point([5, 5]);
-// Divise la ligne
-const splitLines = turf.lineSplit(line, point);
-console.log(splitLines);
+import {addFeature, appConfig, deleteFeature, loadGeoJSON, refreshData, toggleDirection} from './utils.js';
 
 let map;
 let data = [];
@@ -82,23 +70,10 @@ export function initializeMap(containerId, styleUrl) {
             },
         });
 
-        // map.on('click', 'road-layer', (e) => {
-        //     const feature = e.features[0];
-        //     toggleDirection(feature, data, map, userChanges);
-        // });
-
-/*        map.on('click', (event) => {
-            const clickedPoint = turf.point([event.lngLat.lng, event.lngLat.lat]);
-            const lineFeature = lineData.features[0];
-            const splitLines = splitLine(lineFeature, clickedPoint);
-
-            // Mettre à jour la source avec les segments de ligne
-            map.getSource('line-source').setData({
-                type: 'FeatureCollection',
-                features: splitLines.features,
-            });
-        });*/
-
+        map.on('click', 'road-layer', (e) => {
+            const feature = e.features[0];
+            toggleDirection(feature, data, map, userChanges);
+        });
 
         const lineData = {
             type: 'FeatureCollection',
@@ -113,40 +88,44 @@ export function initializeMap(containerId, styleUrl) {
                             [10, 0],
                         ],
                     },
-                    properties: {},
+                    properties: { id: 1, name: 'Line 1' },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [-5, -5],
+                            [5, 5],
+                        ],
+                    },
+                    properties: { id: 2, name: 'Line 2' },
                 },
             ],
         };
 
-        map.addSource('line-source', { type: 'geojson', data: lineData });
+        // map.addSource('line-source', { type: 'geojson', data: lineData });
+        //
+        // map.addLayer({
+        //     id: 'line-layer',
+        //     type: 'line',
+        //     source: 'line-source',
+        //     paint: { 'line-color': '#ff0000', 'line-width': 4 },
+        // });
 
-        map.addLayer({
-            id: 'line-layer',
-            type: 'line',
-            source: 'line-source',
-            paint: { 'line-color': '#ff0000', 'line-width': 4 },
-        });
-
-        let startPointSegment = null;
-        map.on('click', (event) => {
-            if (!startPointSegment) {
-                startPointSegment = turf.point([event.lngLat.lng, event.lngLat.lat]);
-                return;
-            }
-            const clickedLine = turf.lineString([
-                    startPointSegment.geometry.coordinates,
-                    [event.lngLat.lng, event.lngLat.lat]
-                ]
-            );
-
-console.log(lineData);
-            const splitLines = turf.lineSplit(lineData.features[0], clickedLine);
-console.log(splitLines);
-
-            map.getSource('line-source').setData({
-                type: 'FeatureCollection',
-                features: splitLines.features,
+        map.on('contextmenu', 'road-layer', (event) => {
+            const clickedLine = turf.point([event.lngLat.lng, event.lngLat.lat]);
+            const features = map.queryRenderedFeatures(event.point, {
+                layers: ['road-layer'], // Spécifiez la couche cible
             });
+
+            if (features.length) {
+                const clickedFeature = features[0]; // Première feature cliquée
+                const splitLines = turf.lineSplit(clickedFeature, clickedLine);
+                deleteFeature(data, clickedFeature);
+                splitLines.features.forEach(feature => addFeature(data, feature));
+                map.getSource('roads').setData(data);
+            }
         });
     });
 

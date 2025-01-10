@@ -45,6 +45,16 @@ export function applyChangeOnFeature(data, feature) {
     });
 }
 
+export function deleteFeature(data, feature) {
+    data.features = data.features.filter(elem => {
+        return elem.properties['@id'] !== feature.properties['@id'];
+    });
+}
+
+export function addFeature(data, feature) {
+    data.features.push(feature);
+}
+
 // Permet de basculer la direction d'une route
 export function toggleDirection(feature, data, map, userChanges) {
     if (typeof feature.properties.oneway === 'undefined') {
