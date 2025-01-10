@@ -85,3 +85,10 @@ export function toggleDirection(feature, data, map, userChanges) {
         source.setData(data);
     }
 }
+
+export function splitLine(lineCoordinates, splitIndex) {
+    const firstSegment = lineCoordinates.slice(0, splitIndex + 1);
+    const secondSegment = lineCoordinates.slice(splitIndex);
+
+    return [firstSegment, secondSegment];
+}

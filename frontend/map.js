@@ -1,6 +1,19 @@
 // map.js
 import maplibregl, {AttributionControl, NavigationControl} from 'maplibre-gl';
+import * as turf from '@turf/turf';
 import {appConfig, loadGeoJSON, refreshData, toggleDirection} from './utils.js';
+
+// Exemple d'une ligne
+const line = turf.lineString([
+    [0, 0],
+    [5, 5],
+    [10, 10],
+]);
+// Point de coupure
+const point = turf.point([5, 5]);
+// Divise la ligne
+const splitLines = turf.lineSplit(line, point);
+console.log(splitLines);
 
 let map;
 let data = [];
@@ -69,9 +82,71 @@ export function initializeMap(containerId, styleUrl) {
             },
         });
 
-        map.on('click', 'road-layer', (e) => {
-            const feature = e.features[0];
-            toggleDirection(feature, data, map, userChanges);
+        // map.on('click', 'road-layer', (e) => {
+        //     const feature = e.features[0];
+        //     toggleDirection(feature, data, map, userChanges);
+        // });
+
+/*        map.on('click', (event) => {
+            const clickedPoint = turf.point([event.lngLat.lng, event.lngLat.lat]);
+            const lineFeature = lineData.features[0];
+            const splitLines = splitLine(lineFeature, clickedPoint);
+
+            // Mettre à jour la source avec les segments de ligne
+            map.getSource('line-source').setData({
+                type: 'FeatureCollection',
+                features: splitLines.features,
+            });
+        });*/
+
+
+        const lineData = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [-10, 0],
+                            [0, 10],
+                            [10, 0],
+                        ],
+                    },
+                    properties: {},
+                },
+            ],
+        };
+
+        map.addSource('line-source', { type: 'geojson', data: lineData });
+
+        map.addLayer({
+            id: 'line-layer',
+            type: 'line',
+            source: 'line-source',
+            paint: { 'line-color': '#ff0000', 'line-width': 4 },
+        });
+
+        let startPointSegment = null;
+        map.on('click', (event) => {
+            if (!startPointSegment) {
+                startPointSegment = turf.point([event.lngLat.lng, event.lngLat.lat]);
+                return;
+            }
+            const clickedLine = turf.lineString([
+                    startPointSegment.geometry.coordinates,
+                    [event.lngLat.lng, event.lngLat.lat]
+                ]
+            );
+
+console.log(lineData);
+            const splitLines = turf.lineSplit(lineData.features[0], clickedLine);
+console.log(splitLines);
+
+            map.getSource('line-source').setData({
+                type: 'FeatureCollection',
+                features: splitLines.features,
+            });
         });
     });
 
