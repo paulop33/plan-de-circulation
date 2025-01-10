@@ -8,8 +8,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080",
-                   "https://plan-de-circulation.velo-cite.org"],
+    allow_origins=[
+                   "*",
+                   "http://localhost:8080",
+                   "https://plan-de-circulation.velo-cite.org",
+                   "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],  # Autoriser toutes les méthodes (GET, POST, etc.)
     allow_headers=["*"],  # Autoriser tous les en-têtes
