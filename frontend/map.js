@@ -1,17 +1,17 @@
 // map.js
 import maplibregl from 'maplibre-gl';
-import { loadGeoJSON, refreshData, toggleDirection } from './utils.js';
+import {appConfig, loadGeoJSON, refreshData, toggleDirection} from './utils.js';
 
 let map;
 let data = [];
 let userChanges = {};
 
-export function initializeMap(containerId, styleUrl, center, zoom) {
+export function initializeMap(containerId, styleUrl) {
     map = new maplibregl.Map({
         container: containerId, // ID de l'élément HTML où la carte sera rendue
         style: styleUrl,        // Style MapLibre (modifiez si besoin)
-        center: center,         // Coordonnées (longitude, latitude)
-        zoom: zoom              // Niveau de zoom initial
+        center: appConfig.mapInitCenter,         // Coordonnées (longitude, latitude)
+        zoom: appConfig.mapInitZoom              // Niveau de zoom initial
     });
 
     map.on('load', async () => {

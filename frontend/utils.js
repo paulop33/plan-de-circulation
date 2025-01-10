@@ -1,6 +1,9 @@
 // utils.js
 export let appConfig = {
-    'backendUrl': 'http://localhost:8000'
+    backendUrl: 'http://localhost:8000',
+    maxZoomRefresh: 14,
+    mapInitCenter: [-0.5670392, 44.82459],
+    mapInitZoom: 14,
 }
 
 
@@ -19,7 +22,7 @@ export async function loadGeoJSON(bounds) {
 
 // Fonction pour rafraîchir les données de la carte
 export async function refreshData(map, data, userChanges) {
-    if (map.getZoom() < 14) {
+    if (map.getZoom() < appConfig.maxZoomRefresh) {
         return;
     }
     data = await loadGeoJSON(map.getBounds());
