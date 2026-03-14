@@ -47,6 +47,8 @@ export const arrowsLayer = {
         'symbol-placement': 'line',
         'text-field': [
             'case',
+            ['!', ['get', 'oneway']],
+            '',
             ['==', ['get', 'reverse'], true],
             '\u25C0',
             '\u25B6',
