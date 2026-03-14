@@ -1,6 +1,7 @@
 let map = null;
 let data = [];
 let userChanges = {};
+let userSplits = {};
 let activeTool = 'direction';
 
 export function getMap() { return map; }
@@ -10,7 +11,10 @@ export function getData() { return data; }
 export function setData(d) { data = d; }
 
 export function getUserChanges() { return userChanges; }
-export function clearUserChanges() { userChanges = {}; }
+export function clearUserChanges() { userChanges = {}; userSplits = {}; }
+
+export function getUserSplits() { return userSplits; }
+export function clearUserSplits() { userSplits = {}; }
 
 export function getActiveTool() { return activeTool; }
 export function setActiveTool(tool) { activeTool = tool; }

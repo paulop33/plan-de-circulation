@@ -1,9 +1,9 @@
 import maplibregl, { AttributionControl, NavigationControl } from 'maplibre-gl';
 import { appConfig } from './config.js';
 import { loadGeoJSON } from './api.js';
-import { getMap, setMap, getData, setData, getUserChanges, getActiveTool, updateSource } from './state.js';
+import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, updateSource } from './state.js';
 import { roadLayer, pedestrianLayer, arrowsLayer } from './layers.js';
-import { toggleDirection, togglePedestrian, toggleModalFilter } from './interactions.js';
+import { toggleDirection, togglePedestrian, toggleModalFilter, handleSplit } from './interactions.js';
 import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult } from './ui.js';
 import { checkConnectivity } from './graph.js';
 
@@ -13,6 +13,12 @@ async function refreshData() {
 
     const data = await loadGeoJSON(map.getBounds());
     setData(data);
+
+    const userSplits = getUserSplits();
+    for (const [originalId, [featureA, featureB]] of Object.entries(userSplits)) {
+        data.features = data.features.filter(f => f.properties.osm_id !== Number(originalId));
+        data.features.push(featureA, featureB);
+    }
 
     const userChanges = getUserChanges();
     for (const [key, value] of Object.entries(userChanges)) {
@@ -36,6 +42,8 @@ function handleClick(e) {
         togglePedestrian(feature);
     } else if (tool === 'filter') {
         toggleModalFilter(feature);
+    } else if (tool === 'split') {
+        handleSplit(feature, e.lngLat);
     }
 }
 

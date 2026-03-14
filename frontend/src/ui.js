@@ -1,5 +1,5 @@
 import { appConfig } from './config.js';
-import { getMap, setData, clearUserChanges, setActiveTool, updateSource } from './state.js';
+import { getMap, setData, clearUserChanges, clearUserSplits, setActiveTool, updateSource } from './state.js';
 import { loadGeoJSON } from './api.js';
 
 export function updateZoomOverlay() {
@@ -32,6 +32,7 @@ export function initResetButton() {
     btn.addEventListener('click', async () => {
         const map = getMap();
         clearUserChanges();
+        clearUserSplits();
         const data = await loadGeoJSON(map.getBounds());
         setData(data);
         updateSource();

@@ -10,6 +10,8 @@ export const roadLayer = {
             '#f59e0b',
             ['==', ['get', 'override'], true],
             '#000000',
+            ['==', ['get', 'bollard'], true],
+            '#a855f7',
             '#8e8c8c',
         ],
         'line-width': 3,
