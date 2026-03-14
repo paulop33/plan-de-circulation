@@ -5,15 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de circulation</title>
     <link href="style.css" rel="stylesheet" />
-<!--    <script src="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.js"></script>-->
     <link href="https://unpkg.com/maplibre-gl@^5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
 </head>
 <body>
 
 <div id="map" style="width: 100%; height: 100vh;"></div>
+<div id="zoom-overlay" class="hidden absolute inset-0 z-20 bg-black/50 flex items-center justify-center pointer-events-none">
+    <span class="bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg text-lg font-medium">Zoomez davantage pour voir les rues</span>
+</div>
+
+<!-- Toolbar -->
+<div class="absolute top-2 right-2 z-20 flex flex-col gap-2 pointer-events-none">
+    <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col gap-1 pointer-events-auto">
+        <button data-tool="direction" class="px-3 py-1.5 rounded text-sm font-medium ring-2 ring-blue-500 bg-blue-50">Sens</button>
+        <button data-tool="pedestrian" class="px-3 py-1.5 rounded text-sm font-medium">Piéton</button>
+        <button data-tool="filter" class="px-3 py-1.5 rounded text-sm font-medium">Filtre</button>
+    </div>
+    <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col gap-1 pointer-events-auto">
+        <button id="btn-check" class="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 hover:bg-gray-200">Vérifier</button>
+        <button id="btn-reset" class="px-3 py-1.5 rounded text-sm font-medium bg-gray-100 hover:bg-gray-200">Réinitialiser</button>
+    </div>
+</div>
+
+<!-- Légende -->
+<div class="absolute bottom-2 left-2 z-20 bg-white/90 rounded-lg shadow-lg p-3 text-xs pointer-events-auto">
+    <div class="font-medium mb-1.5">Légende</div>
+    <div class="flex items-center gap-2 mb-1">
+        <span class="inline-block w-6 h-0.5 bg-gray-400"></span>
+        <span>Rue (inchangée)</span>
+    </div>
+    <div class="flex items-center gap-2 mb-1">
+        <span class="inline-block w-6 h-0.5 bg-black"></span>
+        <span>Sens modifié</span>
+    </div>
+    <div class="flex items-center gap-2 mb-1">
+        <span class="inline-block w-6 h-0.5 bg-amber-500"></span>
+        <span>Filtre modal</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <span class="inline-block w-6 border-t-2 border-dashed border-green-500"></span>
+        <span>Piétonne</span>
+    </div>
+</div>
+
 <img class="my-0 absolute bottom-0 right-0 z-10" src="assets/img/logo-VC-carte.png" width="75" height="75" alt="logo Vélo-Cité Bordeaux Métropole">
 <script type="module">
-    import { initializeMap } from './map.js';
+    import { initializeMap } from './src/map.js';
 
     // Initialisation de la carte
     const map = initializeMap('map', '/assets/style.json');

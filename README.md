@@ -1,21 +1,41 @@
 # Plan de circulation
-Ce petit projet vous permet de charger puis modifier le plan de circulation de la ville de votre choix.
 
-Les données proviennent d'OpenStreetMap (OSM).
+Ce projet permet de charger puis modifier le plan de circulation d'une ville. Les données proviennent d'OpenStreetMap (OSM).
 
-## Charger les données :
-Le projet ne dispose pas de données par défaut. Il faudra les récupérer.
-https://overpass-turbo.eu/# permet par exemple d'exporter les données d'OSM (un exemple de requete se trouve dans le fichier ``export.txt``).
-
-### Import des données
-Le petit utilitaire ogr2ogr peut servir à importer dans la base de données Postgis.
+## Quick start
 
 ```bash
-docker cp export.geojson backend:/app
-ogr2ogr -f "PostgreSQL" PG:"host=db port=5432 dbname=geodatabase user=userdb password=passdb" export.geojson -nln osm_data -lco GEOMETRY_NAME=geom
+cp .env.example .env
+make up
+make seed
 ```
 
+Ouvrir http://localhost:8080 — la carte affiche les rues de Bordeaux centre.
+
+## Commandes disponibles
+
+| Commande | Description |
+|----------|-------------|
+| `make up` | Lance le projet (build + démarrage) |
+| `make down` | Arrête les conteneurs |
+| `make logs` | Affiche les logs en continu |
+| `make seed` | Importe les données routières depuis Overpass |
+| `make clean` | Reset complet (supprime les volumes de données) |
+
+## Import des données
+
+La commande `make seed` appelle l'API Overpass pour télécharger les données routières de Bordeaux centre, puis les importe dans PostGIS via `ogr2ogr`.
+
+Vous pouvez relancer `make seed` à tout moment pour réimporter les données (la table est vidée puis remplie à nouveau).
+
 ## Structure du projet
-- backend en python pour charger les données d'OSM
-- frontend en html et vanilla js pour le moment
-- carte avec mapbox
+
+- **backend/** — API Symfony 6.4 (PHP 8.2) qui sert les données GeoJSON depuis PostGIS
+- **frontend/** — Interface carte en HTML/JS avec MapLibre GL, bundlée par Vite
+- **compose.yml** — Orchestration Docker (PostGIS, backend, frontend)
+
+## API
+
+`GET http://localhost:8000/api/data?min_lon=-0.58&min_lat=44.82&max_lon=-0.56&max_lat=44.83`
+
+Retourne un GeoJSON `FeatureCollection` des rues dans la bbox donnée.

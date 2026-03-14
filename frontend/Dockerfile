@@ -1,6 +1,11 @@
-FROM nginx:latest
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+ARG VITE_BACKEND_URL=http://localhost:8000
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
+RUN npm run build
 
-COPY . /usr/share/nginx/html
-
-ARG BACKEND_URL
-RUN sed -i "s_http://localhost:8000_${BACKEND_URL}_" /usr/share/nginx/html/config.js
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html

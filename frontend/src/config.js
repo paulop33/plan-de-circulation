@@ -1,0 +1,12 @@
+export const ROAD_STATUS = {
+    NORMAL: 'normal',
+    PEDESTRIAN: 'pedestrian',
+    MODAL_FILTER: 'modalfilter',
+};
+
+export const appConfig = {
+    backendUrl: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
+    maxZoomRefresh: 14,
+    mapInitCenter: [-0.5670392, 44.82459],
+    mapInitZoom: 12,
+};

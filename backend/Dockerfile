@@ -1,26 +1,27 @@
-FROM python:3.10-slim
+FROM php:8.2-apache
 
-# Installer les dépendances système nécessaires à GDAL
-RUN apt-get update \
- && apt-get install -y \
-      gdal-bin \
-      libgdal-dev \
-      postgresql-client \
- && apt-get clean
+RUN apt-get update && apt-get install -y \
+    libpq-dev gdal-bin postgresql-client unzip \
+    && docker-php-ext-install pdo pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
 
-# Définir une variable d'environnement pour GDAL
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Installer les dépendances
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Copier le code
 COPY . .
+RUN composer dump-autoload --optimize \
+    && chmod +x bin/console \
+    && php bin/console cache:warmup --env=prod \
+    && chown -R www-data:www-data var
 
-# Exposer l'application FastAPI
-ARG PORT=80
-ENV PORT=${PORT}
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
+# Apache config
+ENV APACHE_DOCUMENT_ROOT=/app/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf \
+    && sed -ri -e 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf \
+    && a2enmod rewrite
+
+EXPOSE 80
