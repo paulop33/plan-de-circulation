@@ -40,6 +40,39 @@ export const pedestrianLayer = {
     },
 };
 
+export const tramLayer = {
+    id: 'tram-layer',
+    type: 'line',
+    source: 'transit',
+    filter: ['==', ['get', 'route_type'], 0],
+    paint: {
+        'line-color': ['get', 'route_color'],
+        'line-width': 3,
+        'line-opacity': 0.8,
+    },
+    layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+    },
+};
+
+export const busLayer = {
+    id: 'bus-layer',
+    type: 'line',
+    source: 'transit',
+    filter: ['==', ['get', 'route_type'], 3],
+    paint: {
+        'line-color': ['get', 'route_color'],
+        'line-width': 2,
+        'line-opacity': 0.8,
+        'line-dasharray': [2, 2],
+    },
+    layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+    },
+};
+
 export const arrowsLayer = {
     id: 'arrows',
     type: 'symbol',

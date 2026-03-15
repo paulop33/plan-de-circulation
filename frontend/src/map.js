@@ -1,8 +1,8 @@
 import maplibregl, { AttributionControl, NavigationControl } from 'maplibre-gl';
 import { appConfig } from './config.js';
-import { loadGeoJSON } from './api.js';
+import { loadGeoJSON, loadTransitGeoJSON } from './api.js';
 import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, updateSource } from './state.js';
-import { roadLayer, pedestrianLayer, arrowsLayer } from './layers.js';
+import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer } from './layers.js';
 import { toggleDirection, togglePedestrian, toggleModalFilter, handleSplit } from './interactions.js';
 import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult } from './ui.js';
 import { checkConnectivity } from './graph.js';
@@ -73,6 +73,23 @@ export function initializeMap(containerId, styleUrl) {
         map.addLayer(roadLayer);
         map.addLayer(pedestrianLayer);
         map.addLayer(arrowsLayer);
+
+        // Transit layers
+        loadTransitGeoJSON().then(transitData => {
+            map.addSource('transit', {
+                type: 'geojson',
+                data: transitData,
+            });
+            map.addLayer(tramLayer);
+            map.addLayer(busLayer);
+        });
+
+        document.getElementById('toggle-tram')?.addEventListener('change', (e) => {
+            map.setLayoutProperty('tram-layer', 'visibility', e.target.checked ? 'visible' : 'none');
+        });
+        document.getElementById('toggle-bus')?.addEventListener('change', (e) => {
+            map.setLayoutProperty('bus-layer', 'visibility', e.target.checked ? 'visible' : 'none');
+        });
 
         map.on('click', 'road-layer', handleClick);
         map.on('click', 'pedestrian-layer', handleClick);
