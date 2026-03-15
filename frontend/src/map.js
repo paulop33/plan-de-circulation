@@ -1,8 +1,8 @@
 import maplibregl, { AttributionControl, NavigationControl } from 'maplibre-gl';
 import { appConfig } from './config.js';
-import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON } from './api.js';
+import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON, loadParlonsVeloGeoJSON } from './api.js';
 import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, updateSource } from './state.js';
-import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer } from './layers.js';
+import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer, parlonsVeloLayer } from './layers.js';
 import { toggleDirection, togglePedestrian, toggleModalFilter, toggleBollard, handleSplit } from './interactions.js';
 import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult } from './ui.js';
 import { checkConnectivity } from './graph.js';
@@ -36,6 +36,14 @@ function buildSparklineSVG(history) {
         <polyline points="${polyline}" fill="none" stroke="#e74c3c" stroke-width="2"/>
         ${dots}
     </svg>`;
+}
+
+async function refreshParlonsVelo() {
+    const map = getMap();
+    if (map.getLayoutProperty('parlons-velo-layer', 'visibility') === 'none') return;
+    const data = await loadParlonsVeloGeoJSON(map.getBounds());
+    const source = map.getSource('parlons-velo');
+    if (source) source.setData(data);
 }
 
 async function refreshData() {
@@ -143,6 +151,27 @@ export function initializeMap(containerId, styleUrl) {
             map.on('mouseleave', 'traffic-layer', () => { map.getCanvas().style.cursor = ''; });
         });
 
+        // Parlons Vélo points rouges layer
+        map.addSource('parlons-velo', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        map.addLayer(parlonsVeloLayer);
+
+        map.on('click', 'parlons-velo-layer', (e) => {
+            const props = e.features[0].properties;
+            const html = `<strong>Point à améliorer</strong>
+                ${props.description ? '<br>' + props.description : ''}`;
+            new maplibregl.Popup({ maxWidth: '260px' })
+                .setLngLat(e.lngLat)
+                .setHTML(html)
+                .addTo(map);
+        });
+        map.on('mouseenter', 'parlons-velo-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'parlons-velo-layer', () => { map.getCanvas().style.cursor = ''; });
+
+        refreshParlonsVelo();
+
         document.getElementById('toggle-tram')?.addEventListener('change', (e) => {
             map.setLayoutProperty('tram-layer', 'visibility', e.target.checked ? 'visible' : 'none');
         });
@@ -151,6 +180,10 @@ export function initializeMap(containerId, styleUrl) {
         });
         document.getElementById('toggle-traffic')?.addEventListener('change', (e) => {
             map.setLayoutProperty('traffic-layer', 'visibility', e.target.checked ? 'visible' : 'none');
+        });
+        document.getElementById('toggle-parlons-velo')?.addEventListener('change', (e) => {
+            map.setLayoutProperty('parlons-velo-layer', 'visibility', e.target.checked ? 'visible' : 'none');
+            if (e.target.checked) refreshParlonsVelo();
         });
 
         map.on('click', 'road-layer', handleClick);
@@ -170,8 +203,8 @@ export function initializeMap(containerId, styleUrl) {
         updateZoomOverlay();
     });
 
-    map.on('moveend', () => { refreshData(); updateZoomOverlay(); });
-    map.on('zoomend', () => { refreshData(); updateZoomOverlay(); });
+    map.on('moveend', () => { refreshData(); refreshParlonsVelo(); updateZoomOverlay(); });
+    map.on('zoomend', () => { refreshData(); refreshParlonsVelo(); updateZoomOverlay(); });
 
     return map;
 }

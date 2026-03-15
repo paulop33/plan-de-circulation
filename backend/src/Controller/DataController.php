@@ -101,6 +101,44 @@ class DataController extends AbstractController
         ]);
     }
 
+    #[Route('/api/parlons-velo', methods: ['GET'])]
+    public function getParlonsVelo(Request $request, Connection $connection): JsonResponse
+    {
+        $minLon = (float) $request->query->get('min_lon');
+        $minLat = (float) $request->query->get('min_lat');
+        $maxLon = (float) $request->query->get('max_lon');
+        $maxLat = (float) $request->query->get('max_lat');
+
+        $sql = <<<SQL
+            SELECT ST_AsGeoJSON(geom) AS geojson, description
+            FROM parlons_velo_points
+            WHERE geom && ST_MakeEnvelope(:min_lon, :min_lat, :max_lon, :max_lat, 4326)
+        SQL;
+
+        $rows = $connection->fetchAllAssociative($sql, [
+            'min_lon' => $minLon,
+            'min_lat' => $minLat,
+            'max_lon' => $maxLon,
+            'max_lat' => $maxLat,
+        ]);
+
+        $features = [];
+        foreach ($rows as $row) {
+            $features[] = [
+                'type' => 'Feature',
+                'geometry' => json_decode($row['geojson'], true),
+                'properties' => [
+                    'description' => $row['description'],
+                ],
+            ];
+        }
+
+        return $this->json([
+            'type' => 'FeatureCollection',
+            'features' => $features,
+        ]);
+    }
+
     #[Route('/api/transit', methods: ['GET'])]
     public function getTransit(Connection $connection): JsonResponse
     {

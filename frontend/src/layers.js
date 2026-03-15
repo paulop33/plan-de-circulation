@@ -100,6 +100,22 @@ export const trafficLayer = {
     },
 };
 
+export const parlonsVeloLayer = {
+    id: 'parlons-velo-layer',
+    type: 'circle',
+    source: 'parlons-velo',
+    layout: {
+        'visibility': 'none',
+    },
+    paint: {
+        'circle-radius': 5,
+        'circle-color': '#ef4444',
+        'circle-opacity': 0.7,
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#ffffff',
+    },
+};
+
 export const arrowsLayer = {
     id: 'arrows',
     type: 'symbol',
