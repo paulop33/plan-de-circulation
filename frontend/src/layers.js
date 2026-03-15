@@ -63,15 +63,16 @@ export const busLayer = {
     type: 'line',
     source: 'transit',
     filter: ['==', ['get', 'route_type'], 3],
+    layout: {
+        'visibility': 'none',
+        'line-cap': 'round',
+        'line-join': 'round',
+    },
     paint: {
         'line-color': ['get', 'route_color'],
         'line-width': 2,
         'line-opacity': 0.8,
         'line-dasharray': [2, 2],
-    },
-    layout: {
-        'line-cap': 'round',
-        'line-join': 'round',
     },
 };
 
@@ -79,6 +80,9 @@ export const trafficLayer = {
     id: 'traffic-layer',
     type: 'circle',
     source: 'traffic',
+    layout: {
+        'visibility': 'none',
+    },
     paint: {
         'circle-radius': [
             'interpolate', ['linear'], ['get', 'mjo_val'],
