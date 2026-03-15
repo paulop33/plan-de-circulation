@@ -17,3 +17,9 @@ export async function loadTransitGeoJSON() {
     const response = await fetch(url);
     return await response.json();
 }
+
+export async function loadTrafficGeoJSON() {
+    const url = new URL('/api/traffic', appConfig.backendUrl);
+    const response = await fetch(url);
+    return await response.json();
+}

@@ -73,6 +73,31 @@ export const busLayer = {
     },
 };
 
+export const trafficLayer = {
+    id: 'traffic-layer',
+    type: 'circle',
+    source: 'traffic',
+    paint: {
+        'circle-radius': [
+            'interpolate', ['linear'], ['get', 'mjo_val'],
+            0, 4,
+            5000, 10,
+            15000, 20,
+            30000, 35,
+        ],
+        'circle-color': [
+            'interpolate', ['linear'], ['get', 'mjo_val'],
+            0, '#22c55e',
+            5000, '#eab308',
+            15000, '#f97316',
+            30000, '#ef4444',
+        ],
+        'circle-opacity': 0.7,
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#ffffff',
+    },
+};
+
 export const arrowsLayer = {
     id: 'arrows',
     type: 'symbol',
