@@ -1,6 +1,6 @@
 import { getData } from './state.js';
 
-function coordKey(coord) {
+export function coordKey(coord) {
     return `${coord[0].toFixed(6)},${coord[1].toFixed(6)}`;
 }
 

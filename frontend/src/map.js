@@ -1,11 +1,12 @@
 import maplibregl, { AttributionControl, NavigationControl } from 'maplibre-gl';
 import { appConfig } from './config.js';
 import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON, loadParlonsVeloGeoJSON } from './api.js';
-import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, updateSource } from './state.js';
-import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer, parlonsVeloLayer } from './layers.js';
+import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, isRoutingActive, updateSource } from './state.js';
+import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer, parlonsVeloLayer, routeLayer, routeMarkersLayer } from './layers.js';
 import { toggleDirection, togglePedestrian, toggleModalFilter, toggleBollard, handleSplit } from './interactions.js';
-import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult } from './ui.js';
+import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult, initRoutingUI } from './ui.js';
 import { checkConnectivity } from './graph.js';
+import { handleRoutingClick, computeAndDisplayRoute, getRoutingState } from './routing.js';
 
 function buildSparklineSVG(history) {
     if (!history || history.length < 2) return '';
@@ -70,9 +71,16 @@ async function refreshData() {
     }
 
     updateSource();
+
+    // Recalculate route if one is displayed
+    const rs = getRoutingState();
+    if (rs.start && rs.end) {
+        computeAndDisplayRoute(map);
+    }
 }
 
 function handleClick(e) {
+    if (isRoutingActive()) return;
     const tool = getActiveTool();
     const feature = e.features[0];
     if (tool === 'direction') {
@@ -186,11 +194,32 @@ export function initializeMap(containerId, styleUrl) {
             if (e.target.checked) refreshParlonsVelo();
         });
 
+        // Route layers
+        map.addSource('route', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        map.addSource('route-markers', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        map.addLayer(routeLayer);
+        map.addLayer(routeMarkersLayer);
+
+        // Click handler: routing takes priority when active
+        map.on('click', (e) => {
+            if (isRoutingActive()) {
+                handleRoutingClick(e.lngLat, map);
+                return;
+            }
+        });
+
         map.on('click', 'road-layer', handleClick);
         map.on('click', 'pedestrian-layer', handleClick);
 
         initToolbar();
         initResetButton();
+        initRoutingUI();
 
         const btnCheck = document.getElementById('btn-check');
         if (btnCheck) {

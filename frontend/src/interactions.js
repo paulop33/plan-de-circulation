@@ -1,5 +1,6 @@
 import { ROAD_STATUS } from './config.js';
-import { getData, getUserChanges, getUserSplits, updateSource } from './state.js';
+import { getData, getMap, getUserChanges, getUserSplits, updateSource } from './state.js';
+import { getRoutingState, computeAndDisplayRoute } from './routing.js';
 
 function applyChange(feature) {
     const data = getData();
@@ -15,6 +16,12 @@ function applyChange(feature) {
     });
 
     updateSource();
+
+    // Recalculate route if one is displayed
+    const rs = getRoutingState();
+    if (rs.start && rs.end) {
+        computeAndDisplayRoute(getMap());
+    }
 }
 
 function ensureDefaults(feature) {

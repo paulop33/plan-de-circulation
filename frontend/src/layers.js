@@ -120,6 +120,37 @@ export const parlonsVeloLayer = {
     },
 };
 
+export const routeLayer = {
+    id: 'route-layer',
+    type: 'line',
+    source: 'route',
+    paint: {
+        'line-color': '#3b82f6',
+        'line-width': 5,
+        'line-opacity': 0.8,
+    },
+    layout: {
+        'line-cap': 'round',
+        'line-join': 'round',
+    },
+};
+
+export const routeMarkersLayer = {
+    id: 'route-markers-layer',
+    type: 'circle',
+    source: 'route-markers',
+    paint: {
+        'circle-radius': 7,
+        'circle-color': [
+            'case',
+            ['==', ['get', 'type'], 'start'], '#22c55e',
+            '#ef4444',
+        ],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+    },
+};
+
 export const arrowsLayer = {
     id: 'arrows',
     type: 'symbol',

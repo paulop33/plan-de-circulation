@@ -7,7 +7,8 @@ export const ROAD_STATUS = {
 
 export const appConfig = {
     backendUrl: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
-    maxZoomRefresh: 14,
+    maxZoomRefresh: 13,
     mapInitCenter: [-0.5670392, 44.82459],
     mapInitZoom: 12,
+    boundsPadding: 0.5,
 };
