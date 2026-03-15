@@ -8,6 +8,8 @@ export const roadLayer = {
             'case',
             ['all', ['==', ['get', 'status'], 'modalfilter'], ['==', ['get', 'override'], true]],
             '#f59e0b',
+            ['all', ['==', ['get', 'status'], 'bollard'], ['==', ['get', 'override'], true]],
+            '#a855f7',
             ['==', ['get', 'override'], true],
             '#000000',
             ['==', ['get', 'bollard'], true],

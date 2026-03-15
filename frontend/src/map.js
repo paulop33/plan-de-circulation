@@ -3,7 +3,7 @@ import { appConfig } from './config.js';
 import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON } from './api.js';
 import { getMap, setMap, getData, setData, getUserChanges, getUserSplits, getActiveTool, updateSource } from './state.js';
 import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer } from './layers.js';
-import { toggleDirection, togglePedestrian, toggleModalFilter, handleSplit } from './interactions.js';
+import { toggleDirection, togglePedestrian, toggleModalFilter, toggleBollard, handleSplit } from './interactions.js';
 import { updateZoomOverlay, initToolbar, initResetButton, showConnectivityResult } from './ui.js';
 import { checkConnectivity } from './graph.js';
 
@@ -73,6 +73,8 @@ function handleClick(e) {
         togglePedestrian(feature);
     } else if (tool === 'filter') {
         toggleModalFilter(feature);
+    } else if (tool === 'bollard') {
+        toggleBollard(feature);
     } else if (tool === 'split') {
         handleSplit(feature, e.lngLat);
     }

@@ -2,6 +2,7 @@ export const ROAD_STATUS = {
     NORMAL: 'normal',
     PEDESTRIAN: 'pedestrian',
     MODAL_FILTER: 'modalfilter',
+    BOLLARD: 'bollard',
 };
 
 export const appConfig = {

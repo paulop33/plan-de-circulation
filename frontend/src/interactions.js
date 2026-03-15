@@ -167,3 +167,17 @@ export function toggleModalFilter(feature) {
     checkOverride(feature);
     applyChange(feature);
 }
+
+export function toggleBollard(feature) {
+    ensureDefaults(feature);
+    snapshotInitial(feature);
+
+    if (feature.properties.status === ROAD_STATUS.BOLLARD) {
+        feature.properties.status = ROAD_STATUS.NORMAL;
+    } else {
+        feature.properties.status = ROAD_STATUS.BOLLARD;
+    }
+
+    checkOverride(feature);
+    applyChange(feature);
+}
