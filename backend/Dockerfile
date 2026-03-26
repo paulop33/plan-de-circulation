@@ -1,8 +1,8 @@
 FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
-    libpq-dev gdal-bin postgresql-client unzip \
-    && docker-php-ext-install pdo pdo_pgsql \
+    libpq-dev libzip-dev libicu-dev gdal-bin postgresql-client unzip \
+    && docker-php-ext-install pdo pdo_pgsql zip intl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -14,7 +14,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY . .
 RUN composer dump-autoload --optimize \
     && chmod +x bin/console \
-    && php bin/console cache:warmup --env=prod \
+    && mkdir -p var/cache var/log \
     && chown -R www-data:www-data var
 
 # Apache config

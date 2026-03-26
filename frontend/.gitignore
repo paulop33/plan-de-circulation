@@ -1,0 +1,31 @@
+node_modules
+
+# SvelteKit output
+/.svelte-kit
+/build
+
+# Hosting adapters
+.output
+.vercel
+.netlify
+.wrangler
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# IDE
+.vscode/
+
+# npm
+package-lock.json

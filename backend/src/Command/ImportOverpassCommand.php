@@ -64,19 +64,20 @@ OVERPASS;
         file_put_contents($osmFile, $response->getContent());
         $io->success('Données téléchargées.');
 
-        // Créer la table si elle n'existe pas
-        $io->section('Création de la table osm_data si nécessaire...');
+        // Recréer la table (DROP + CREATE pour s'assurer du schéma correct)
+        $io->section('Création de la table osm_data...');
+        $this->connection->executeStatement('DROP TABLE IF EXISTS osm_data');
         $this->connection->executeStatement(<<<SQL
-            CREATE TABLE IF NOT EXISTS osm_data (
+            CREATE TABLE osm_data (
                 ogc_fid SERIAL PRIMARY KEY,
                 geom geometry(Geometry, 4326),
+                osm_id VARCHAR(255),
                 name VARCHAR(255),
-                id VARCHAR(255),
+                highway VARCHAR(50),
                 oneway VARCHAR(10),
-                highway VARCHAR(50)
+                other_tags TEXT
             )
         SQL);
-        $this->connection->executeStatement('TRUNCATE TABLE osm_data');
         $io->success('Table prête.');
 
         // Importer via ogr2ogr (OSM driver → lines layer → PostGIS)
@@ -107,6 +108,31 @@ OVERPASS;
             @unlink($osmFile);
             return Command::FAILURE;
         }
+
+        // Extraire oneway depuis other_tags (format hstore: "key"=>"value",...)
+        $io->section('Extraction du tag oneway...');
+        $this->connection->executeStatement(<<<SQL
+            UPDATE osm_data
+            SET oneway = 'yes'
+            WHERE other_tags LIKE '%"oneway"=>"yes"%'
+        SQL);
+        $onewayCount = $this->connection->fetchOne("SELECT COUNT(*) FROM osm_data WHERE oneway = 'yes'");
+        $io->success(sprintf('%d rues en sens unique détectées.', $onewayCount));
+
+        // Détecter les rues bornées (motor_vehicle=no ou destination, hors piétonnes)
+        $io->section('Détection des rues bornées...');
+        $this->connection->executeStatement("ALTER TABLE osm_data ADD COLUMN IF NOT EXISTS bollard BOOLEAN DEFAULT FALSE");
+        $this->connection->executeStatement(<<<SQL
+            UPDATE osm_data SET bollard = TRUE
+            WHERE (other_tags LIKE '%"motor_vehicle"=>"no"%'
+               OR other_tags LIKE '%"motor_vehicle"=>"destination"%')
+               AND highway != 'pedestrian'
+        SQL);
+        $bollardCount = $this->connection->fetchOne("SELECT COUNT(*) FROM osm_data WHERE bollard = TRUE");
+        $io->success(sprintf('%d rues bornées détectées.', $bollardCount));
+
+        $pedestrianCount = $this->connection->fetchOne("SELECT COUNT(*) FROM osm_data WHERE highway = 'pedestrian'");
+        $io->success(sprintf('%d rues piétonnes détectées.', $pedestrianCount));
 
         $io->success(sprintf('Import terminé : %d entités dans osm_data.', $count));
 
