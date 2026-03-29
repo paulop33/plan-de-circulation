@@ -36,6 +36,7 @@ services:
       GTFS_URL: "${GTFS_URL:-https://bdx.mecatran.com/utw/ws/gtfsfeed/static/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt}"
       TRAFFIC_COUNTS_URLS: "${TRAFFIC_COUNTS_URLS:-}"
       TRAFFIC_SENSORS_URL: "${TRAFFIC_SENSORS_URL:-https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/pc_capte_p/exports/geojson?limit=-1}"
+      PUNCTUAL_TRAFFIC_URL: "${PUNCTUAL_TRAFFIC_URL:-https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/pc_capte_ponct_p/exports/geojson?limit=-1}"
       PARLONS_VELO_URL: "${PARLONS_VELO_URL:-https://opendata.parlons-velo.fr/download/cc96c79e1c460a08d122b8d251286438.zip}"
     ports:
       - "${BACKEND_PORT:-8000}:80"

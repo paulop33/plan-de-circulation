@@ -26,10 +26,17 @@ security:
             stateless: false
 
     access_control:
+        # API Platform docs
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+        - { path: ^/api/contexts, roles: PUBLIC_ACCESS }
+        - { path: ^/api/errors, roles: PUBLIC_ACCESS }
+        - { path: ^/api/validation_errors, roles: PUBLIC_ACCESS }
+        - { path: ^/api/.well-known, roles: PUBLIC_ACCESS }
         # Public geo endpoints
         - { path: ^/api/data, roles: PUBLIC_ACCESS }
         - { path: ^/api/transit, roles: PUBLIC_ACCESS }
         - { path: ^/api/traffic, roles: PUBLIC_ACCESS }
+        - { path: ^/api/punctual-traffic, roles: PUBLIC_ACCESS }
         - { path: ^/api/parlons-velo, roles: PUBLIC_ACCESS }
         # Public auth endpoints
         - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }

@@ -120,6 +120,34 @@ export const parlonsVeloLayer = {
 	},
 };
 
+export const punctualTrafficLayer = {
+	id: 'punctual-traffic-layer',
+	type: 'circle',
+	source: 'punctual-traffic',
+	layout: {
+		'visibility': 'none',
+	},
+	paint: {
+		'circle-radius': [
+			'interpolate', ['linear'], ['get', 'tmjo_tv'],
+			0, 4,
+			5000, 10,
+			15000, 20,
+			30000, 35,
+		],
+		'circle-color': [
+			'interpolate', ['linear'], ['get', 'tmjo_tv'],
+			0, '#22c55e',
+			5000, '#eab308',
+			15000, '#f97316',
+			30000, '#ef4444',
+		],
+		'circle-opacity': 0.7,
+		'circle-stroke-width': 2,
+		'circle-stroke-color': '#1e40af',
+	},
+};
+
 export const routeLayer = {
 	id: 'route-layer',
 	type: 'line',

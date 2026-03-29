@@ -27,6 +27,12 @@ export async function loadTrafficGeoJSON() {
 	return await response.json();
 }
 
+export async function loadPunctualTrafficGeoJSON() {
+	const url = new URL('/api/punctual-traffic', appConfig.backendUrl || window.location.origin);
+	const response = await fetch(url, { credentials: 'include' });
+	return await response.json();
+}
+
 export async function loadParlonsVeloGeoJSON(bounds) {
 	const url = new URL('/api/parlons-velo', appConfig.backendUrl || window.location.origin);
 	url.searchParams.append('min_lon', bounds.getWest());

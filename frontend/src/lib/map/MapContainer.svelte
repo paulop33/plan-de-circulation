@@ -2,9 +2,9 @@
 	import { onMount } from 'svelte';
 	import maplibregl, { AttributionControl, NavigationControl } from 'maplibre-gl';
 	import { appConfig } from '$lib/api/config.js';
-	import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON } from '$lib/api/api.js';
+	import { loadGeoJSON, loadTransitGeoJSON, loadTrafficGeoJSON, loadPunctualTrafficGeoJSON } from '$lib/api/api.js';
 	import { appState, routingState, updateSource } from '$lib/stores.svelte.js';
-	import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer, parlonsVeloLayer, routeLayer, routeMarkersLayer } from '$lib/domain/layers.js';
+	import { roadLayer, pedestrianLayer, arrowsLayer, tramLayer, busLayer, trafficLayer, punctualTrafficLayer, parlonsVeloLayer, routeLayer, routeMarkersLayer } from '$lib/domain/layers.js';
 	import { toggleDirection, togglePedestrian, toggleModalFilter, toggleBollard, handleSplit } from '$lib/domain/interactions.js';
 	import { handleRoutingClick, computeAndDisplayRoute } from '$lib/domain/routing.js';
 	import { refreshParlonsVelo } from '$lib/domain/map-actions.js';
@@ -108,10 +108,11 @@
 
 		map.on('load', async () => {
 			// Fire all data fetches in parallel
-			const [roadData, transitData, trafficData] = await Promise.all([
+			const [roadData, transitData, trafficData, punctualTrafficData] = await Promise.all([
 				loadGeoJSON(map.getBounds()),
 				loadTransitGeoJSON(),
 				loadTrafficGeoJSON(),
+				loadPunctualTrafficGeoJSON(),
 			]);
 
 			appState.data = roadData;
@@ -143,6 +144,26 @@
 			});
 			map.on('mouseenter', 'traffic-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
 			map.on('mouseleave', 'traffic-layer', () => { map.getCanvas().style.cursor = ''; });
+
+			map.addSource('punctual-traffic', { type: 'geojson', data: punctualTrafficData });
+			map.addLayer(punctualTrafficLayer);
+
+			map.on('click', 'punctual-traffic-layer', (e) => {
+				const p = e.features[0].properties;
+				const html = `<strong>Comptage ponctuel</strong>
+					<br>TMJO : ${p.tmjo_tv} veh/j (${p.annee || '?'})
+					${p.orientation ? '<br>Direction : ' + p.orientation : ''}
+					<br>VL : ${p.tmjo_vl ?? '?'} / PL : ${p.tmjo_pl ?? '?'}
+					<br>HPM : ${p.hpm_tv ?? '?'} veh/h — HPS : ${p.hps_tv ?? '?'} veh/h
+					${p.v85_vl ? '<br>V85 VL : ' + p.v85_vl + ' km/h' : ''}
+					${p.v85_pl ? '<br>V85 PL : ' + p.v85_pl + ' km/h' : ''}`;
+				new maplibregl.Popup({ maxWidth: '260px' })
+					.setLngLat(e.lngLat)
+					.setHTML(html)
+					.addTo(map);
+			});
+			map.on('mouseenter', 'punctual-traffic-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+			map.on('mouseleave', 'punctual-traffic-layer', () => { map.getCanvas().style.cursor = ''; });
 
 			map.addSource('parlons-velo', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 			map.addLayer(parlonsVeloLayer);

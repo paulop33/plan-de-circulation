@@ -5,7 +5,9 @@
 	let tramChecked = $state(true);
 	let busChecked = $state(false);
 	let trafficChecked = $state(false);
+	let punctualTrafficChecked = $state(false);
 	let parlonsVeloChecked = $state(false);
+	let hierarchyChecked = $state(false);
 
 	function toggleLayer(layerId, visible) {
 		const map = appState.map;
@@ -13,6 +15,26 @@
 		map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
 	}
 
+	function handleHierarchy(e) {
+		hierarchyChecked = e.target.checked;
+		const map = appState.map;
+		if (!map) return;
+		if (hierarchyChecked) {
+			map.setPaintProperty('road-layer', 'line-width', [
+				'match', ['get', 'highway'],
+				'primary', 6, 'secondary', 5, 'tertiary', 4,
+				'residential', 3, 'living_street', 2, 3,
+			]);
+			map.setLayoutProperty('arrows', 'text-size', [
+				'match', ['get', 'highway'],
+				'primary', 20, 'secondary', 18, 'tertiary', 16,
+				'residential', 14, 'living_street', 12, 14,
+			]);
+		} else {
+			map.setPaintProperty('road-layer', 'line-width', 3);
+			map.setLayoutProperty('arrows', 'text-size', 16);
+		}
+	}
 	function handleTram(e) {
 		tramChecked = e.target.checked;
 		toggleLayer('tram-layer', tramChecked);
@@ -24,6 +46,10 @@
 	function handleTraffic(e) {
 		trafficChecked = e.target.checked;
 		toggleLayer('traffic-layer', trafficChecked);
+	}
+	function handlePunctualTraffic(e) {
+		punctualTrafficChecked = e.target.checked;
+		toggleLayer('punctual-traffic-layer', punctualTrafficChecked);
 	}
 	function handleParlonsVelo(e) {
 		parlonsVeloChecked = e.target.checked;
@@ -50,9 +76,35 @@
 		<span class="inline-block w-6 h-0.5 bg-purple-500"></span>
 		<span>Rue bornee</span>
 	</div>
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 border-t-2 border-dashed border-green-500"></span>
 		<span>Pietonne</span>
+	</div>
+	<div class="border-t border-gray-200 mt-2 pt-2">
+		<label class="flex items-center gap-2 mb-1 cursor-pointer">
+			<input type="checkbox" checked={hierarchyChecked} onchange={handleHierarchy} class="accent-gray-500">
+			<span class="font-medium">Hierarchie routiere</span>
+		</label>
+		{#if hierarchyChecked}
+			<div class="ml-5 mt-1">
+				<div class="flex items-center gap-2 mb-1">
+					<span class="inline-block w-6 border-t-[3px] border-gray-400"></span>
+					<span>Primaire</span>
+				</div>
+				<div class="flex items-center gap-2 mb-1">
+					<span class="inline-block w-6 border-t-2 border-gray-400"></span>
+					<span>Secondaire</span>
+				</div>
+				<div class="flex items-center gap-2 mb-1">
+					<span class="inline-block w-6 border-t border-gray-400"></span>
+					<span>Tertiaire</span>
+				</div>
+				<div class="flex items-center gap-2 mb-1">
+					<span class="inline-block w-6 border-t-[0.5px] border-gray-400"></span>
+					<span>Residentielle</span>
+				</div>
+			</div>
+		{/if}
 	</div>
 	<div class="border-t border-gray-200 mt-2 pt-2">
 		<div class="font-medium mb-1.5">Transport</div>
@@ -67,6 +119,10 @@
 		<label class="flex items-center gap-2 mb-1 cursor-pointer">
 			<input type="checkbox" checked={trafficChecked} onchange={handleTraffic} class="accent-red-500">
 			<span>Compteurs voitures</span>
+		</label>
+		<label class="flex items-center gap-2 mb-1 cursor-pointer">
+			<input type="checkbox" checked={punctualTrafficChecked} onchange={handlePunctualTraffic} class="accent-blue-500">
+			<span>Comptages ponctuels</span>
 		</label>
 	</div>
 	<div class="border-t border-gray-200 mt-2 pt-2">

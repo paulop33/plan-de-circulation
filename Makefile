@@ -13,5 +13,8 @@ logs:      ## Affiche les logs
 seed:      ## Importe les données depuis Overpass
 	docker compose exec backend php bin/console app:import-overpass
 
+import-punctual-traffic: ## Importe les capteurs ponctuels de trafic
+	docker compose exec backend php bin/console app:import-punctual-traffic
+
 clean:     ## Reset complet (supprime les volumes)
 	docker compose down -v
