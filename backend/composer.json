@@ -16,7 +16,13 @@
         "symfony/password-hasher": "6.4.*",
         "symfonycasts/reset-password-bundle": "^1.21",
         "symfony/mailer": "6.4.*",
-        "symfony/validator": "6.4.*"
+        "symfony/validator": "6.4.*",
+        "api-platform/core": "^4.3",
+        "symfony/property-info": "^7.4",
+        "symfony/property-access": "^7.4",
+        "symfony/serializer": "^7.4",
+        "symfony/asset": "^7.4",
+        "symfony/twig-bundle": "^7.4"
     },
     "autoload": {
         "psr-4": {

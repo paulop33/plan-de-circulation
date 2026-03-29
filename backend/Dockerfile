@@ -15,6 +15,8 @@ COPY . .
 RUN composer dump-autoload --optimize \
     && chmod +x bin/console \
     && mkdir -p var/cache var/log \
+    && mkdir -p public/bundles \
+    && cp -r vendor/api-platform/core/src/Symfony/Bundle/Resources/public public/bundles/apiplatform \
     && chown -R www-data:www-data var
 
 # Apache config
