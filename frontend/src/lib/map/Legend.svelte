@@ -97,35 +97,34 @@
 		<span>Pietonne</span>
 	</div>
 	<label class="flex items-center gap-2 mt-2 cursor-pointer">
+		<input type="checkbox" checked={hierarchyChecked} onchange={handleHierarchy} class="accent-gray-500">
+		<span>Hierarchie routiere</span>
+	</label>
+	{#if hierarchyChecked}
+		<div class="ml-5 mt-1">
+			<div class="flex items-center gap-2 mb-1">
+				<span class="inline-block w-6 border-t-[3px] border-gray-400"></span>
+				<span>Primaire</span>
+			</div>
+			<div class="flex items-center gap-2 mb-1">
+				<span class="inline-block w-6 border-t-2 border-gray-400"></span>
+				<span>Secondaire</span>
+			</div>
+			<div class="flex items-center gap-2 mb-1">
+				<span class="inline-block w-6 border-t border-gray-400"></span>
+				<span>Tertiaire</span>
+			</div>
+			<div class="flex items-center gap-2 mb-1">
+				<span class="inline-block w-6 border-t-[0.5px] border-gray-400"></span>
+				<span>Residentielle</span>
+			</div>
+		</div>
+	{/if}
+	<label class="flex items-center gap-2 mt-1 cursor-pointer">
 		<input type="checkbox" checked={onlyModifiedChecked} onchange={handleOnlyModified} class="accent-gray-500">
 		<span>Modifications uniquement</span>
 	</label>
-	<div class="border-t border-gray-200 mt-2 pt-2">
-		<label class="flex items-center gap-2 mb-1 cursor-pointer">
-			<input type="checkbox" checked={hierarchyChecked} onchange={handleHierarchy} class="accent-gray-500">
-			<span class="font-medium">Hierarchie routiere</span>
-		</label>
-		{#if hierarchyChecked}
-			<div class="ml-5 mt-1">
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block w-6 border-t-[3px] border-gray-400"></span>
-					<span>Primaire</span>
-				</div>
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block w-6 border-t-2 border-gray-400"></span>
-					<span>Secondaire</span>
-				</div>
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block w-6 border-t border-gray-400"></span>
-					<span>Tertiaire</span>
-				</div>
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block w-6 border-t-[0.5px] border-gray-400"></span>
-					<span>Residentielle</span>
-				</div>
-			</div>
-		{/if}
-	</div>
+	<div class="text-[10px] text-gray-400 mt-2">Source : OpenStreetMap</div>
 	<div class="border-t border-gray-200 mt-2 pt-2">
 		<div class="font-medium mb-1.5">Transport</div>
 		<label class="flex items-center gap-2 mb-1 cursor-pointer">
@@ -144,6 +143,7 @@
 			<input type="checkbox" checked={punctualTrafficChecked} onchange={handlePunctualTraffic} class="accent-blue-500">
 			<span>Comptages ponctuels</span>
 		</label>
+		<div class="text-[10px] text-gray-400 mt-1">Source : Open Data Bordeaux Metropole</div>
 	</div>
 	<div class="border-t border-gray-200 mt-2 pt-2">
 		<div class="font-medium mb-1.5">Velo</div>
