@@ -115,7 +115,7 @@ class DataController extends AbstractController
             SQL;
 
             $rows = $connection->fetchAllAssociative($sql);
-        } catch (\Exception) {
+        } catch (\Doctrine\DBAL\Exception\TableNotFoundException) {
             return $this->json(['type' => 'FeatureCollection', 'features' => []]);
         }
 

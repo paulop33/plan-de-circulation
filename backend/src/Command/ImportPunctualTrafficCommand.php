@@ -66,6 +66,7 @@ class ImportPunctualTrafficCommand extends Command
         $inserted = 0;
         $skipped = 0;
 
+        $this->connection->beginTransaction();
         foreach ($data['features'] as $feature) {
             $geometry = $feature['geometry'] ?? null;
             if (!$geometry || $geometry['type'] !== 'Point' || empty($geometry['coordinates'])) {
@@ -104,8 +105,10 @@ class ImportPunctualTrafficCommand extends Command
             );
             $inserted++;
         }
+        $this->connection->commit();
 
         $this->connection->executeStatement('CREATE INDEX idx_punctual_traffic_geom ON punctual_traffic_counts USING GIST (geom)');
+        $this->connection->executeStatement('CREATE INDEX idx_punctual_traffic_latest ON punctual_traffic_counts (gid, sens_orientation, annee DESC)');
 
         $io->success(sprintf('Import terminé : %d capteurs insérés (%d ignorés).', $inserted, $skipped));
 

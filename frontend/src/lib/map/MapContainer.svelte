@@ -11,6 +11,18 @@
 
 	let mapContainer;
 
+	function addPopupLayer(map, layerId, htmlBuilder) {
+		map.on('click', layerId, (e) => {
+			const html = htmlBuilder(e.features[0].properties);
+			new maplibregl.Popup({ maxWidth: '260px' })
+				.setLngLat(e.lngLat)
+				.setHTML(html)
+				.addTo(map);
+		});
+		map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+		map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+	}
+
 	function buildSparklineSVG(history) {
 		if (!history || history.length < 2) return '';
 		const w = 200, h = 80, pad = 20;
@@ -129,56 +141,34 @@
 			map.addSource('traffic', { type: 'geojson', data: trafficData });
 			map.addLayer(trafficLayer);
 
-			map.on('click', 'traffic-layer', (e) => {
-				const props = e.features[0].properties;
+			addPopupLayer(map, 'traffic-layer', (props) => {
 				const history = typeof props.history === 'string' ? JSON.parse(props.history) : props.history;
-				const sparkline = buildSparklineSVG(history);
-				const html = `<strong>${props.nom_voie || props.ident}</strong>
+				return `<strong>${props.nom_voie || props.ident}</strong>
 					<br>TMJO : ${props.mjo_val} veh/j (${props.year || '?'})
 					${props.sens_cir ? '<br>Direction : ' + props.sens_cir : ''}
-					${sparkline}`;
-				new maplibregl.Popup({ maxWidth: '260px' })
-					.setLngLat(e.lngLat)
-					.setHTML(html)
-					.addTo(map);
+					${buildSparklineSVG(history)}`;
 			});
-			map.on('mouseenter', 'traffic-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-			map.on('mouseleave', 'traffic-layer', () => { map.getCanvas().style.cursor = ''; });
 
 			map.addSource('punctual-traffic', { type: 'geojson', data: punctualTrafficData });
 			map.addLayer(punctualTrafficLayer);
 
-			map.on('click', 'punctual-traffic-layer', (e) => {
-				const p = e.features[0].properties;
-				const html = `<strong>Comptage ponctuel</strong>
+			addPopupLayer(map, 'punctual-traffic-layer', (p) => {
+				return `<strong>Comptage ponctuel</strong>
 					<br>TMJO : ${p.tmjo_tv} veh/j (${p.annee || '?'})
 					${p.orientation ? '<br>Direction : ' + p.orientation : ''}
 					<br>VL : ${p.tmjo_vl ?? '?'} / PL : ${p.tmjo_pl ?? '?'}
 					<br>HPM : ${p.hpm_tv ?? '?'} veh/h — HPS : ${p.hps_tv ?? '?'} veh/h
 					${p.v85_vl ? '<br>V85 VL : ' + p.v85_vl + ' km/h' : ''}
 					${p.v85_pl ? '<br>V85 PL : ' + p.v85_pl + ' km/h' : ''}`;
-				new maplibregl.Popup({ maxWidth: '260px' })
-					.setLngLat(e.lngLat)
-					.setHTML(html)
-					.addTo(map);
 			});
-			map.on('mouseenter', 'punctual-traffic-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-			map.on('mouseleave', 'punctual-traffic-layer', () => { map.getCanvas().style.cursor = ''; });
 
 			map.addSource('parlons-velo', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 			map.addLayer(parlonsVeloLayer);
 
-			map.on('click', 'parlons-velo-layer', (e) => {
-				const props = e.features[0].properties;
-				const html = `<strong>Point a ameliorer</strong>
+			addPopupLayer(map, 'parlons-velo-layer', (props) => {
+				return `<strong>Point a ameliorer</strong>
 					${props.description ? '<br>' + props.description : ''}`;
-				new maplibregl.Popup({ maxWidth: '260px' })
-					.setLngLat(e.lngLat)
-					.setHTML(html)
-					.addTo(map);
 			});
-			map.on('mouseenter', 'parlons-velo-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-			map.on('mouseleave', 'parlons-velo-layer', () => { map.getCanvas().style.cursor = ''; });
 
 			refreshParlonsVelo();
 
