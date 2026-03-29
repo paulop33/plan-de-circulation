@@ -2,22 +2,18 @@
 
 namespace App\Controller;
 
+use App\Dto\BboxQuery;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 
 class DataController extends AbstractController
 {
     #[Route('/api/data', methods: ['GET'])]
-    public function getData(Request $request, Connection $connection): JsonResponse
+    public function getData(#[MapQueryString] BboxQuery $bbox, Connection $connection): JsonResponse
     {
-        $minLon = (float) $request->query->get('min_lon');
-        $minLat = (float) $request->query->get('min_lat');
-        $maxLon = (float) $request->query->get('max_lon');
-        $maxLat = (float) $request->query->get('max_lat');
-
         $sql = <<<SQL
             SELECT ST_AsGeoJSON(geom) AS geojson, name, ogc_fid, oneway, highway, bollard
             FROM osm_data
@@ -25,10 +21,10 @@ class DataController extends AbstractController
         SQL;
 
         $rows = $connection->fetchAllAssociative($sql, [
-            'min_lon' => $minLon,
-            'min_lat' => $minLat,
-            'max_lon' => $maxLon,
-            'max_lat' => $maxLat,
+            'min_lon' => $bbox->min_lon,
+            'min_lat' => $bbox->min_lat,
+            'max_lon' => $bbox->max_lon,
+            'max_lat' => $bbox->max_lat,
         ]);
 
         $features = [];
@@ -148,13 +144,8 @@ class DataController extends AbstractController
     }
 
     #[Route('/api/parlons-velo', methods: ['GET'])]
-    public function getParlonsVelo(Request $request, Connection $connection): JsonResponse
+    public function getParlonsVelo(#[MapQueryString] BboxQuery $bbox, Connection $connection): JsonResponse
     {
-        $minLon = (float) $request->query->get('min_lon');
-        $minLat = (float) $request->query->get('min_lat');
-        $maxLon = (float) $request->query->get('max_lon');
-        $maxLat = (float) $request->query->get('max_lat');
-
         $sql = <<<SQL
             SELECT ST_AsGeoJSON(geom) AS geojson, description
             FROM parlons_velo_points
@@ -162,10 +153,10 @@ class DataController extends AbstractController
         SQL;
 
         $rows = $connection->fetchAllAssociative($sql, [
-            'min_lon' => $minLon,
-            'min_lat' => $minLat,
-            'max_lon' => $maxLon,
-            'max_lat' => $maxLat,
+            'min_lon' => $bbox->min_lon,
+            'min_lat' => $bbox->min_lat,
+            'max_lon' => $bbox->max_lon,
+            'max_lat' => $bbox->max_lat,
         ]);
 
         $features = [];
