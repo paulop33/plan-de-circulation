@@ -24,6 +24,11 @@ class MapRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllOrderedByUpdatedAt(): array
+    {
+        return $this->findBy([], ['updatedAt' => 'DESC']);
+    }
+
     public function findPublicMaps(): array
     {
         return $this->createQueryBuilder('m')

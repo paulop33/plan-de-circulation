@@ -4,9 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Map;
 use App\Entity\MapShare;
-use App\Entity\User;
 use App\Repository\MapRepository;
 use App\Repository\MapShareRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,6 +21,7 @@ class MapController extends AbstractController
         private EntityManagerInterface $em,
         private MapRepository $mapRepository,
         private MapShareRepository $mapShareRepository,
+        private UserRepository $userRepository,
     ) {}
 
     #[Route('', methods: ['GET'])]
@@ -169,7 +170,7 @@ class MapController extends AbstractController
         $share->setCanEdit($data['canEdit'] ?? false);
 
         if (!empty($data['email'])) {
-            $targetUser = $this->em->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+            $targetUser = $this->userRepository->findByEmail($data['email']);
             if (!$targetUser) {
                 return $this->json(['error' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
             }

@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -16,6 +17,7 @@ class CreateAdminCommand extends Command
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private UserRepository $userRepository,
         private UserPasswordHasherInterface $passwordHasher,
     ) {
         parent::__construct();
@@ -33,7 +35,7 @@ class CreateAdminCommand extends Command
         $email = $input->getArgument('email');
         $password = $input->getArgument('password');
 
-        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $existing = $this->userRepository->findByEmail($email);
         if ($existing) {
             $existing->setRoles(['ROLE_ADMIN']);
             $existing->setPassword($this->passwordHasher->hashPassword($existing, $password));

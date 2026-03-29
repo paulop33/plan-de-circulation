@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Map;
 use App\Entity\User;
+use App\Repository\MapRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,12 +15,16 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/admin')]
 class AdminController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(
+        private EntityManagerInterface $em,
+        private UserRepository $userRepository,
+        private MapRepository $mapRepository,
+    ) {}
 
     #[Route('/users', methods: ['GET'])]
     public function listUsers(): JsonResponse
     {
-        $users = $this->em->getRepository(User::class)->findAll();
+        $users = $this->userRepository->findAll();
         return $this->json(array_map(fn(User $u) => [
             'id' => $u->getId(),
             'email' => $u->getEmail(),
@@ -30,7 +36,7 @@ class AdminController extends AbstractController
     #[Route('/users/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function deleteUser(int $id): JsonResponse
     {
-        $user = $this->em->getRepository(User::class)->find($id);
+        $user = $this->userRepository->find($id);
         if (!$user) {
             return $this->json(['error' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
@@ -49,7 +55,7 @@ class AdminController extends AbstractController
     #[Route('/maps', methods: ['GET'])]
     public function listMaps(): JsonResponse
     {
-        $maps = $this->em->getRepository(Map::class)->findBy([], ['updatedAt' => 'DESC']);
+        $maps = $this->mapRepository->findAllOrderedByUpdatedAt();
         return $this->json(array_map(fn(Map $m) => [
             'id' => $m->getId(),
             'name' => $m->getName(),
@@ -63,7 +69,7 @@ class AdminController extends AbstractController
     #[Route('/maps/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function deleteMap(int $id): JsonResponse
     {
-        $map = $this->em->getRepository(Map::class)->find($id);
+        $map = $this->mapRepository->find($id);
         if (!$map) {
             return $this->json(['error' => 'Carte non trouvée'], Response::HTTP_NOT_FOUND);
         }

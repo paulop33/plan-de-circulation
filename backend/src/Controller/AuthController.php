@@ -26,6 +26,7 @@ class AuthController extends AbstractController
     public function __construct(
         private EntityManagerInterface $em,
         private UserPasswordHasherInterface $passwordHasher,
+        private UserRepository $userRepository,
     ) {}
 
     #[Route('/register', methods: ['POST'])]
@@ -43,7 +44,7 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Le mot de passe doit contenir au moins 8 caractères'], Response::HTTP_BAD_REQUEST);
         }
 
-        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $existing = $this->userRepository->findByEmail($email);
         if ($existing) {
             return $this->json(['error' => 'Un compte existe déjà avec cet email'], Response::HTTP_CONFLICT);
         }
@@ -100,7 +101,7 @@ class AuthController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? '';
 
-        $user = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $user = $this->userRepository->findByEmail($email);
 
         // Always return success to prevent email enumeration
         if (!$user) {
