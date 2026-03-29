@@ -29,7 +29,6 @@ class ImportGtfsCommand extends Command
 
         $gtfsUrl = $_ENV['GTFS_URL'] ?? getenv('GTFS_URL') ?: 'https://bdx.mecatran.com/utw/ws/gtfsfeed/static/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt';
 
-        // 1. Télécharger le GTFS zip
         $io->section('Téléchargement du GTFS...');
         $response = $this->httpClient->request('GET', $gtfsUrl, ['timeout' => 300]);
 
@@ -39,7 +38,6 @@ class ImportGtfsCommand extends Command
         file_put_contents($zipFile, $response->getContent());
         $io->success('GTFS téléchargé.');
 
-        // 2. Extraire le zip
         $io->section('Extraction...');
         $zip = new \ZipArchive();
         if ($zip->open($zipFile) !== true) {
@@ -49,7 +47,6 @@ class ImportGtfsCommand extends Command
         $zip->extractTo($tmpDir);
         $zip->close();
 
-        // 3. Parser routes.txt
         $io->section('Parsing routes.txt...');
         $routes = [];
         $handle = fopen($tmpDir . '/routes.txt', 'r');
@@ -66,9 +63,10 @@ class ImportGtfsCommand extends Command
         fclose($handle);
         $io->success(sprintf('%d routes parsées.', count($routes)));
 
-        // 4. Parser trips.txt — dédupliquer : un shape_id par (route_id, direction_id)
         $io->section('Parsing trips.txt...');
-        $tripMap = []; // key: "route_id-direction_id" => shape_id
+        $tripMap = [];
+        $allShapeIds = [];
+        $shapeToTrip = [];
         $handle = fopen($tmpDir . '/trips.txt', 'r');
         $header = fgetcsv($handle);
         $idx = array_flip($header);
@@ -79,6 +77,7 @@ class ImportGtfsCommand extends Command
             if ($shapeId === null || $shapeId === '') {
                 continue;
             }
+            $tripId = $row[$idx['trip_id']];
             $key = $routeId . '-' . $directionId;
             if (!isset($tripMap[$key])) {
                 $tripMap[$key] = [
@@ -87,30 +86,90 @@ class ImportGtfsCommand extends Command
                     'shape_id' => $shapeId,
                 ];
             }
+            $allShapeIds[$key][$shapeId] = true;
+            if (!isset($shapeToTrip[$shapeId])) {
+                $shapeToTrip[$shapeId] = $tripId;
+            }
         }
         fclose($handle);
         $io->success(sprintf('%d combinaisons route/direction.', count($tripMap)));
 
-        // 5. Trouver un trip_id représentatif par combinaison route/direction
-        $io->section('Association des terminus...');
-        $neededTrips = []; // trip_id => key dans tripMap
-        $handle = fopen($tmpDir . '/trips.txt', 'r');
+        $io->section('Sélection des shapes les plus longs...');
+        $neededShapeIds = [];
+        foreach ($allShapeIds as $shapeIds) {
+            foreach ($shapeIds as $shapeId => $_) {
+                $neededShapeIds[$shapeId] = true;
+            }
+        }
+
+        $shapeCounts = [];
+        $handle = fopen($tmpDir . '/shapes.txt', 'r');
         $header = fgetcsv($handle);
         $idx = array_flip($header);
         while (($row = fgetcsv($handle)) !== false) {
-            $routeId = $row[$idx['route_id']];
-            $directionId = isset($idx['direction_id']) ? (int) $row[$idx['direction_id']] : 0;
-            $tripId = $row[$idx['trip_id']];
-            $key = $routeId . '-' . $directionId;
-            if (isset($tripMap[$key]) && !isset($tripMap[$key]['trip_id'])) {
-                $tripMap[$key]['trip_id'] = $tripId;
-                $neededTrips[$tripId] = $key;
+            $shapeId = $row[$idx['shape_id']];
+            if (!isset($neededShapeIds[$shapeId])) {
+                continue;
             }
+            $shapeCounts[$shapeId] = ($shapeCounts[$shapeId] ?? 0) + 1;
         }
         fclose($handle);
 
-        // 5b. Parser stop_times.txt uniquement pour les trips nécessaires
-        $io->section('Parsing stop_times.txt...');
+        foreach ($allShapeIds as $key => $shapeIds) {
+            $bestShape = null;
+            $bestCount = 0;
+            foreach ($shapeIds as $shapeId => $_) {
+                $count = $shapeCounts[$shapeId] ?? 0;
+                if ($count > $bestCount) {
+                    $bestCount = $count;
+                    $bestShape = $shapeId;
+                }
+            }
+            if ($bestShape !== null) {
+                $tripMap[$key]['shape_id'] = $bestShape;
+            }
+        }
+        unset($allShapeIds, $shapeCounts);
+
+        $io->section('Parsing shapes.txt...');
+        $selectedShapeIds = [];
+        foreach ($tripMap as $entry) {
+            $selectedShapeIds[$entry['shape_id']] = true;
+        }
+
+        $shapes = [];
+        $handle = fopen($tmpDir . '/shapes.txt', 'r');
+        $header = fgetcsv($handle);
+        $idx = array_flip($header);
+        while (($row = fgetcsv($handle)) !== false) {
+            $shapeId = $row[$idx['shape_id']];
+            if (!isset($selectedShapeIds[$shapeId])) {
+                continue;
+            }
+            $shapes[$shapeId][] = [
+                'lon' => (float) $row[$idx['shape_pt_lon']],
+                'lat' => (float) $row[$idx['shape_pt_lat']],
+                'seq' => (int) $row[$idx['shape_pt_sequence']],
+            ];
+        }
+        fclose($handle);
+
+        foreach ($shapes as &$points) {
+            usort($points, fn($a, $b) => $a['seq'] <=> $b['seq']);
+        }
+        unset($points, $selectedShapeIds, $neededShapeIds);
+        $io->success(sprintf('%d shapes parsées.', count($shapes)));
+
+        $io->section('Association des terminus...');
+        $neededTrips = [];
+        foreach ($tripMap as $key => $entry) {
+            $tripId = $shapeToTrip[$entry['shape_id']] ?? null;
+            if ($tripId !== null) {
+                $neededTrips[$tripId] = $key;
+            }
+        }
+        unset($shapeToTrip);
+
         $tripStops = [];
         $handle = fopen($tmpDir . '/stop_times.txt', 'r');
         $header = fgetcsv($handle);
@@ -133,8 +192,6 @@ class ImportGtfsCommand extends Command
         }
         fclose($handle);
 
-        // 5c. Parser stops.txt
-        $io->section('Parsing stops.txt...');
         $stops = [];
         $handle = fopen($tmpDir . '/stops.txt', 'r');
         $header = fgetcsv($handle);
@@ -144,7 +201,6 @@ class ImportGtfsCommand extends Command
         }
         fclose($handle);
 
-        // 5d. Associer les noms de terminus
         foreach ($neededTrips as $tripId => $key) {
             if (isset($tripStops[$tripId])) {
                 $tripMap[$key]['origin'] = $stops[$tripStops[$tripId]['first']] ?? null;
@@ -154,38 +210,6 @@ class ImportGtfsCommand extends Command
         unset($tripStops, $neededTrips, $stops);
         $io->success('Terminus associés.');
 
-        // 6. Parser shapes.txt (uniquement les shapes nécessaires)
-        $io->section('Parsing shapes.txt...');
-        $neededShapeIds = [];
-        foreach ($tripMap as $entry) {
-            $neededShapeIds[$entry['shape_id']] = true;
-        }
-
-        $shapes = []; // shape_id => [[lon, lat, seq], ...]
-        $handle = fopen($tmpDir . '/shapes.txt', 'r');
-        $header = fgetcsv($handle);
-        $idx = array_flip($header);
-        while (($row = fgetcsv($handle)) !== false) {
-            $shapeId = $row[$idx['shape_id']];
-            if (!isset($neededShapeIds[$shapeId])) {
-                continue;
-            }
-            $shapes[$shapeId][] = [
-                'lon' => (float) $row[$idx['shape_pt_lon']],
-                'lat' => (float) $row[$idx['shape_pt_lat']],
-                'seq' => (int) $row[$idx['shape_pt_sequence']],
-            ];
-        }
-        fclose($handle);
-
-        // Trier par séquence
-        foreach ($shapes as &$points) {
-            usort($points, fn($a, $b) => $a['seq'] <=> $b['seq']);
-        }
-        unset($points);
-        $io->success(sprintf('%d shapes parsées.', count($shapes)));
-
-        // 6. Créer la table
         $io->section('Création de la table gtfs_routes...');
         $this->connection->executeStatement('DROP TABLE IF EXISTS gtfs_routes');
         $this->connection->executeStatement(<<<SQL
@@ -201,11 +225,11 @@ class ImportGtfsCommand extends Command
             )
         SQL);
 
-        // 7. Insérer les lignes
         $io->section('Insertion des lignes...');
         $tramCount = 0;
         $busCount = 0;
 
+        $this->connection->beginTransaction();
         foreach ($tripMap as $entry) {
             $routeId = $entry['route_id'];
             $directionId = $entry['direction_id'];
@@ -248,10 +272,11 @@ class ImportGtfsCommand extends Command
             }
         }
 
+        $this->connection->commit();
+
         $totalCount = $this->connection->fetchOne('SELECT COUNT(*) FROM gtfs_routes');
         $io->success(sprintf('Import terminé : %d lignes (%d tram, %d bus).', $totalCount, $tramCount, $busCount));
 
-        // 8. Nettoyage
         $this->removeDirectory($tmpDir);
 
         return Command::SUCCESS;
