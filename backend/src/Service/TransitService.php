@@ -21,6 +21,8 @@ class TransitService
                     'route_short_name' => $row['route_short_name'],
                     'route_type' => (int) $row['route_type'],
                     'route_color' => '#' . ($row['route_color'] ?: '888888'),
+                    'origin' => $row['origin'],
+                    'headsign' => $row['headsign'],
                 ],
             ];
         }

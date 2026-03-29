@@ -138,6 +138,18 @@
 			map.addLayer(tramLayer);
 			map.addLayer(busLayer);
 
+			const transitPopup = (props) => {
+				const type = props.route_type === 0 ? 'Tram' : 'Bus';
+				const color = props.route_color || '#888888';
+				return `<div style="text-align:center">
+					<div style="width:36px;height:36px;border-radius:50%;background:${color};color:#fff;font-weight:bold;font-size:14px;line-height:36px;margin:0 auto 6px;text-align:center">${props.route_short_name}</div>
+					<div style="font-size:13px;font-weight:600;margin-bottom:2px">${type}</div>
+					${props.origin && props.headsign ? `<div style="font-size:12px;color:#555">${props.origin} → ${props.headsign}</div>` : ''}
+				</div>`;
+			};
+			addPopupLayer(map, 'tram-layer', transitPopup);
+			addPopupLayer(map, 'bus-layer', transitPopup);
+
 			map.addSource('traffic', { type: 'geojson', data: trafficData });
 			map.addLayer(trafficLayer);
 

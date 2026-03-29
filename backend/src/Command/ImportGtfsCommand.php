@@ -91,7 +91,70 @@ class ImportGtfsCommand extends Command
         fclose($handle);
         $io->success(sprintf('%d combinaisons route/direction.', count($tripMap)));
 
-        // 5. Parser shapes.txt (uniquement les shapes nécessaires)
+        // 5. Trouver un trip_id représentatif par combinaison route/direction
+        $io->section('Association des terminus...');
+        $neededTrips = []; // trip_id => key dans tripMap
+        $handle = fopen($tmpDir . '/trips.txt', 'r');
+        $header = fgetcsv($handle);
+        $idx = array_flip($header);
+        while (($row = fgetcsv($handle)) !== false) {
+            $routeId = $row[$idx['route_id']];
+            $directionId = isset($idx['direction_id']) ? (int) $row[$idx['direction_id']] : 0;
+            $tripId = $row[$idx['trip_id']];
+            $key = $routeId . '-' . $directionId;
+            if (isset($tripMap[$key]) && !isset($tripMap[$key]['trip_id'])) {
+                $tripMap[$key]['trip_id'] = $tripId;
+                $neededTrips[$tripId] = $key;
+            }
+        }
+        fclose($handle);
+
+        // 5b. Parser stop_times.txt uniquement pour les trips nécessaires
+        $io->section('Parsing stop_times.txt...');
+        $tripStops = [];
+        $handle = fopen($tmpDir . '/stop_times.txt', 'r');
+        $header = fgetcsv($handle);
+        $idx = array_flip($header);
+        while (($row = fgetcsv($handle)) !== false) {
+            $tripId = $row[$idx['trip_id']];
+            if (!isset($neededTrips[$tripId])) {
+                continue;
+            }
+            $stopId = $row[$idx['stop_id']];
+            $seq = (int) $row[$idx['stop_sequence']];
+            if (!isset($tripStops[$tripId]) || $seq < $tripStops[$tripId]['first_seq']) {
+                $tripStops[$tripId]['first'] = $stopId;
+                $tripStops[$tripId]['first_seq'] = $seq;
+            }
+            if (!isset($tripStops[$tripId]['last_seq']) || $seq > $tripStops[$tripId]['last_seq']) {
+                $tripStops[$tripId]['last'] = $stopId;
+                $tripStops[$tripId]['last_seq'] = $seq;
+            }
+        }
+        fclose($handle);
+
+        // 5c. Parser stops.txt
+        $io->section('Parsing stops.txt...');
+        $stops = [];
+        $handle = fopen($tmpDir . '/stops.txt', 'r');
+        $header = fgetcsv($handle);
+        $idx = array_flip($header);
+        while (($row = fgetcsv($handle)) !== false) {
+            $stops[$row[$idx['stop_id']]] = $row[$idx['stop_name']];
+        }
+        fclose($handle);
+
+        // 5d. Associer les noms de terminus
+        foreach ($neededTrips as $tripId => $key) {
+            if (isset($tripStops[$tripId])) {
+                $tripMap[$key]['origin'] = $stops[$tripStops[$tripId]['first']] ?? null;
+                $tripMap[$key]['headsign'] = $stops[$tripStops[$tripId]['last']] ?? null;
+            }
+        }
+        unset($tripStops, $neededTrips, $stops);
+        $io->success('Terminus associés.');
+
+        // 6. Parser shapes.txt (uniquement les shapes nécessaires)
         $io->section('Parsing shapes.txt...');
         $neededShapeIds = [];
         foreach ($tripMap as $entry) {
@@ -132,6 +195,8 @@ class ImportGtfsCommand extends Command
                 route_type INTEGER,
                 route_color VARCHAR(10),
                 direction_id INTEGER,
+                origin VARCHAR(255),
+                headsign VARCHAR(255),
                 geom geometry(LineString, 4326)
             )
         SQL);
@@ -164,12 +229,14 @@ class ImportGtfsCommand extends Command
             $wkt = 'LINESTRING(' . $coords . ')';
 
             $this->connection->executeStatement(
-                "INSERT INTO gtfs_routes (route_short_name, route_type, route_color, direction_id, geom) VALUES (:name, :type, :color, :dir, ST_GeomFromText(:wkt, 4326))",
+                "INSERT INTO gtfs_routes (route_short_name, route_type, route_color, direction_id, origin, headsign, geom) VALUES (:name, :type, :color, :dir, :origin, :headsign, ST_GeomFromText(:wkt, 4326))",
                 [
                     'name' => $route['route_short_name'],
                     'type' => $route['route_type'],
                     'color' => $route['route_color'],
                     'dir' => $directionId,
+                    'origin' => $entry['origin'] ?? null,
+                    'headsign' => $entry['headsign'] ?? null,
                     'wkt' => $wkt,
                 ]
             );

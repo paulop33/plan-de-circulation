@@ -11,7 +11,7 @@ class GtfsRouteRepository
     public function findAll(): array
     {
         $sql = <<<SQL
-            SELECT ST_AsGeoJSON(geom) AS geojson, route_short_name, route_type, route_color
+            SELECT ST_AsGeoJSON(geom) AS geojson, route_short_name, route_type, route_color, origin, headsign
             FROM gtfs_routes
         SQL;
 
