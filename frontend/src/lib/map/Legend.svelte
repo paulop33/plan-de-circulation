@@ -8,6 +8,7 @@
 	let punctualTrafficChecked = $state(false);
 	let parlonsVeloChecked = $state(false);
 	let hierarchyChecked = $state(false);
+	let onlyModifiedChecked = $state(false);
 
 	function toggleLayer(layerId, visible) {
 		const map = appState.map;
@@ -35,6 +36,21 @@
 			map.setLayoutProperty('arrows', 'text-size', 16);
 		}
 	}
+	function handleOnlyModified(e) {
+		onlyModifiedChecked = e.target.checked;
+		const map = appState.map;
+		if (!map) return;
+		if (onlyModifiedChecked) {
+			map.setFilter('road-layer', ['all', ['!=', ['get', 'status'], 'pedestrian'], ['==', ['get', 'override'], true]]);
+			map.setFilter('pedestrian-layer', ['all', ['==', ['get', 'status'], 'pedestrian'], ['==', ['get', 'override'], true]]);
+			map.setFilter('arrows', ['all', ['!=', ['get', 'status'], 'pedestrian'], ['==', ['get', 'override'], true]]);
+		} else {
+			map.setFilter('road-layer', ['!=', ['get', 'status'], 'pedestrian']);
+			map.setFilter('pedestrian-layer', ['==', ['get', 'status'], 'pedestrian']);
+			map.setFilter('arrows', ['!=', ['get', 'status'], 'pedestrian']);
+		}
+	}
+
 	function handleTram(e) {
 		tramChecked = e.target.checked;
 		toggleLayer('tram-layer', tramChecked);
@@ -80,6 +96,10 @@
 		<span class="inline-block w-6 border-t-2 border-dashed border-green-500"></span>
 		<span>Pietonne</span>
 	</div>
+	<label class="flex items-center gap-2 mt-2 cursor-pointer">
+		<input type="checkbox" checked={onlyModifiedChecked} onchange={handleOnlyModified} class="accent-gray-500">
+		<span>Modifications uniquement</span>
+	</label>
 	<div class="border-t border-gray-200 mt-2 pt-2">
 		<label class="flex items-center gap-2 mb-1 cursor-pointer">
 			<input type="checkbox" checked={hierarchyChecked} onchange={handleHierarchy} class="accent-gray-500">
