@@ -75,14 +75,14 @@
 </script>
 
 <div class="absolute bottom-2 left-2 z-20 bg-white/90 rounded-lg shadow-lg p-3 text-xs pointer-events-auto">
-	<div class="font-medium mb-1.5">Legende</div>
+	<div class="font-medium mb-1.5">Légende</div>
 	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 h-0.5 bg-gray-400"></span>
 		<span>Rue (inchangee)</span>
 	</div>
 	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 h-0.5 bg-black"></span>
-		<span>Sens modifie</span>
+		<span>Sens modifié</span>
 	</div>
 	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 h-0.5 bg-amber-500"></span>
@@ -90,7 +90,7 @@
 	</div>
 	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 h-0.5 bg-purple-500"></span>
-		<span>Rue bornee</span>
+		<span>Rue bornée</span>
 	</div>
 	<div class="flex items-center gap-2 mb-1">
 		<span class="inline-block w-6 border-t-2 border-dashed border-green-500"></span>
@@ -98,7 +98,7 @@
 	</div>
 	<label class="flex items-center gap-2 mt-2 cursor-pointer">
 		<input type="checkbox" checked={hierarchyChecked} onchange={handleHierarchy} class="accent-gray-500">
-		<span>Hierarchie routiere</span>
+		<span>Hiérarchie routière</span>
 	</label>
 	{#if hierarchyChecked}
 		<div class="ml-5 mt-1">
@@ -146,11 +146,11 @@
 		<div class="text-[10px] text-gray-400 mt-1">Source : Open Data Bordeaux Metropole</div>
 	</div>
 	<div class="border-t border-gray-200 mt-2 pt-2">
-		<div class="font-medium mb-1.5">Velo</div>
+		<div class="font-medium mb-1.5">Vélo</div>
 		<label class="flex items-center gap-2 mb-1 cursor-pointer">
 			<input type="checkbox" checked={parlonsVeloChecked} onchange={handleParlonsVelo} class="accent-red-500">
-			<span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span>Points a ameliorer</span>
+			<span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span>Points à améliorer</span>
 		</label>
-		<div class="text-[10px] text-gray-400 mt-1">Source : Barometre Parlons Velo 2025 — FUB</div>
+		<div class="text-[10px] text-gray-400 mt-1">Source : Baromètre Parlons Vélo 2025 — FUB</div>
 	</div>
 </div>

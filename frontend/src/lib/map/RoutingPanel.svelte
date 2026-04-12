@@ -7,7 +7,7 @@
 
 	const modes = [
 		{ id: 'car', label: 'Voiture' },
-		{ id: 'bike', label: 'Velo' },
+		{ id: 'bike', label: 'Vélo' },
 	];
 
 	function applyResult(result) {
