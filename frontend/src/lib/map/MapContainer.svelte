@@ -85,7 +85,6 @@
 		});
 
 		updateSource();
-		recomputeRoute();
 	}
 
 	function handleClick(e) {
