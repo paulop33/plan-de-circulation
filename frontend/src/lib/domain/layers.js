@@ -199,7 +199,12 @@ export const arrowsLayer = {
 		'symbol-spacing': 50,
 	},
 	paint: {
-		'text-color': '#8e8c8c',
+		'text-color': [
+			'case',
+			['==', ['get', 'override'], true],
+			'#000000',
+			'#8e8c8c',
+		],
 		'text-opacity': 1,
 	},
 };
