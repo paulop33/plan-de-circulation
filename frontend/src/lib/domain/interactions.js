@@ -61,6 +61,8 @@ export function togglePedestrian(feature, state, updateSource, recomputeRoute) {
 
 	if (feature.properties.status === ROAD_STATUS.PEDESTRIAN) {
 		feature.properties.status = ROAD_STATUS.NORMAL;
+		feature.properties.oneway = feature.properties.initialoneway ?? false;
+		feature.properties.reverse = false;
 	} else {
 		feature.properties.status = ROAD_STATUS.PEDESTRIAN;
 		feature.properties.oneway = false;
