@@ -1,7 +1,7 @@
 import { ROAD_STATUS } from '$lib/api/config.js';
 
 function applyChange(feature, state, updateSource, recomputeRoute) {
-	state.userChanges[feature.properties['osm_id']] = feature;
+	state.userChanges[feature.properties['osm_id']] = { properties: { ...feature.properties } };
 
 	state.data.features = state.data.features.map(elem => {
 		if (elem.properties['osm_id'] === feature.properties['osm_id']) {
